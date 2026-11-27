@@ -90,7 +90,7 @@ This run writes exact versions and commit SHAs, and Dependabot's version updates
         day: "monday"
   ```
 
-  Each ecosystem part adds its own entry to `updates`, and may add an `ignore` list to the `docker` entry.
+  The example holds the entries that are the same in every repo. Write `github-actions` only when the repo has a workflow, and `docker` only when it has a Dockerfile. Each ecosystem part adds its own entry to `updates`, and may add an `ignore` list to the `docker` entry when the repo has that entry.
 
   For `github-actions`, `directory: "/"` covers `.github/workflows` and an `action.yml` at the root. With `action.yml` files in other folders, write `directories` with `/` and each of those folders in place of `directory`, so the pins step 7 writes there stay current too. Write the entry when the repo has a workflow. `<owner>` is the owner's login from the survey, so the references step 7 leaves alone stay where they are. Dependabot updates a SHA pin and the version comment after it together.
 

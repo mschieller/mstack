@@ -53,7 +53,7 @@ The summary of a raised peer range says that consumers on an older version of th
 
 ## Step 4: Dependabot
 
-- With pnpm or npm, add this entry to `updates`:
+- With pnpm or npm, add this entry to `updates`. It is shown at the indentation it has in the file:
 
   ```yaml
     - package-ecosystem: "npm"
@@ -72,7 +72,7 @@ The summary of a raised peer range says that consumers on an older version of th
 
   `npm` is the ecosystem for npm and for pnpm. Its `directory` is the folder that holds the lockfile. Leave the entry out with any other package manager.
 
-- When the survey found a Node version, add this to the `docker` entry:
+- When the survey found a Node version and the repo has a `docker` entry, add this to that entry:
 
   ```yaml
       ignore:
@@ -80,7 +80,7 @@ The summary of a raised peer range says that consumers on an older version of th
           update-types: ["version-update:semver-major"]
   ```
 
-- The two `ignore` entries for Node turn off its majors. Step 6 moves Node to a new major by hand, in every place at once, and odd majors never become LTS. Dependabot cannot change `engines.node` or `.node-version`, so a major it took would move the image or the types alone. Write them when the survey found a Node version. When an image holds Node under another name, such as a mirrored image, add that name to the `docker` entry. A minor or patch update of the image moves the Dockerfile only, and step 6 brings every place back to one version on the next run.
+- The two `ignore` entries for Node turn off its majors. Step 6 moves Node to a new major by hand, in every place at once, and odd majors never become LTS. Dependabot cannot change `engines.node` or `.node-version`, so a major it took would move the image or the types alone. Write them when the survey found a Node version, and leave the `ignore` key out of the `npm` entry otherwise. When an image holds Node under another name, such as a mirrored image, add that name to the `docker` entry. A minor or patch update of the image moves the Dockerfile only, and step 6 brings every place back to one version on the next run.
 
 - With pnpm or npm, add a group for each family below whose main package a `package.json` in the repo lists. Its plugins declare the major they support, so each major of the family lands in one PR:
 

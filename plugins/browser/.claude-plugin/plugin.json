@@ -1,0 +1,10 @@
+{
+  "name": "browser",
+  "version": "0.1.0",
+  "description": "Playwright browser tools, started so that they also work in repos that pin pnpm or another package manager in devEngines",
+  "author": {
+    "name": "Mads Schiellerup"
+  },
+  "license": "MIT",
+  "mcpServers": "./.mcp.json"
+}

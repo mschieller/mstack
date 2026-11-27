@@ -1,0 +1,19 @@
+{
+  "name": "mstack",
+  "description": "Developer workflow skills and reviewer agents for Claude Code",
+  "owner": {
+    "name": "Mads Schiellerup"
+  },
+  "plugins": [
+    {
+      "name": "mstack",
+      "description": "Developer workflow skills and reviewer agents: review, deep-review with parallel reviewer agents, ship to a green PR, sync-base, grill, ask-me, architecture, docs-review, accessibility-review, dependency audit, visualize and unslop",
+      "source": "./plugins/mstack"
+    },
+    {
+      "name": "browser",
+      "description": "Playwright browser tools, started so that they also work in repos that pin pnpm or another package manager in devEngines",
+      "source": "./plugins/browser"
+    }
+  ]
+}

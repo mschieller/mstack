@@ -1,6 +1,6 @@
 {
   "name": "mstack",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Developer workflow skills and reviewer agents: review, deep-review with parallel reviewer agents, ship to a green PR, sync-base, grill, ask-me, architecture, docs-review, accessibility-review, tdd, bug, handoff, dependency audit, visualize and unslop",
   "author": {
     "name": "Mads Schiellerup"

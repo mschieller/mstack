@@ -12,6 +12,7 @@ Settle a list that already exists, one item at a time. The user decides. You exp
 
 - The list is the one most recently shown in the conversation: review findings, proposals or open points. Item numbers or a section name in the arguments narrow it. When another skill hands over, the list is that skill's findings.
 - `decide` turns off editing. The answers are recorded and nothing changes on disk.
+- When the list is the open round of a `mstack:grill` session, `decide` holds whether or not the word was given, because grill changes nothing until it has finished.
 - If the conversation holds no list, say so and stop. This skill does not produce findings.
 - Before the first item, say how many items there are, the order you take them in, and whether answers are applied.
 
@@ -42,6 +43,8 @@ Ask one item per dialog. Put up to four items in one dialog only when each has t
 
 Follow a free-text answer as written. If it sets a direction that leaves a choice open, ask one follow-up before you edit, and stay on the item until it is settled.
 
+When the answer is a question or asks for more detail, it settles nothing. Answer it, then ask about the same item again.
+
 Object once, with the file or line as evidence, only when the chosen option breaks correctness, security or loses data. If the user keeps the answer, follow it.
 
 ## 5. Act
@@ -58,6 +61,6 @@ Run the checks that were moved here. A failure reopens its item: say what failed
 
 Read the changed files together and look for conflicts the edits created between them. Ask about each one the same way.
 
-If another skill handed over the list, return the outcomes to it, and that skill writes the summary. Otherwise call the `advisor` tool if it is available, then finish with a table of every item and its outcome, followed by the choices you made without asking, what was run for real and what was only checked on paper, and the items not walked.
+If another skill handed over the list, return the outcomes to it, and that skill writes the summary. If the list was a grill round, return the answers as `A1: ...` lines and go on with the `mstack:grill` skill, at its next round or at its step 4. In every other case, call the `advisor` tool if it is available, then finish with a table of every item and its outcome, followed by the choices you made without asking, what was run for real and what was only checked on paper, and the items not walked.
 
-When the walk ends with items left, because the user stops it or the context runs long, write a note with the `mstack:handoff` skill. When another skill handed over the list, give that skill and its step that called this one as the skill and the next step, so that its rules for each answer hold again on resume. Otherwise give `ask-me` and `3. Ask`. In both cases give each item not walked with its outline and its options. A task has one note, so add to the note the calling skill wrote, when it wrote one.
+When the walk ends with items left, because the user stops it or the context runs long, write a note with the `mstack:handoff` skill. When another skill handed over the list, give that skill and its step that called this one as the skill and the next step, so that its rules for each answer hold again on resume. For a grill round, give `grill` and `2. Ask in rounds`. Otherwise give `ask-me` and `3. Ask`. In both cases give each item not walked with its outline and its options. A task has one note, so add to the note the calling skill wrote, when it wrote one.

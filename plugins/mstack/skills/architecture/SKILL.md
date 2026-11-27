@@ -18,7 +18,7 @@ Propose restructurings that make the code easier to change, test and navigate, t
 
 ## 2. Scan
 
-Send an Explore agent on Haiku at medium effort to map the scoped area: modules, their sizes, who calls whom, and where tests sit. Judge the friction yourself in the main session:
+Map the scoped area: modules, their sizes, who calls whom, and where tests sit. Do it yourself. When the map would fill your context and the session allows subagents, one Explore agent on Haiku at medium effort may do it. Judge the friction yourself in the main session:
 
 - One concept that needs a reader to jump between many small modules.
 - Shallow modules whose interface is nearly as complex as their implementation.

@@ -16,9 +16,9 @@ A mode word, `docs` or `issues`, counts only at the start of the arguments. When
 
 Before the first round, read what the plan touches: the issue, the code, the docs and earlier decisions.
 
-- Look up small facts yourself. Send a read-heavy lookup to an Explore subagent on Haiku at medium effort. Never ask the user for something you can find in the repo, the tools or the docs.
+- Do the lookups yourself. A read-heavy lookup that would fill your context may go to one read-only subagent, an Explore agent on Haiku at medium effort, when the session allows subagents. Never ask the user for something you can find in the repo, the tools or the docs.
 - A pending lookup blocks only the questions that depend on it. Ask the rest now.
-- When the repo's CLAUDE.md or AGENTS.md has a grill checklist, or points at one, read it. Ask each of its questions that the plan and the code leave open, in the rounds, next to your own.
+- When the repo's CLAUDE.md or AGENTS.md has a grill checklist, or points at one, read it. Ask each of its questions that the plan and the code leave open, in the rounds, next to your own. When the checklist gives a record format, this session ends with a record in that format, with or without the word `docs`. Step 5 says how.
 
 ## 2. Ask in rounds
 
@@ -32,9 +32,9 @@ Format each question like this:
 Recommended: <the answer you would pick and the reason in one sentence>
 ```
 
-Word every question so that "yes" accepts the recommendation. End each round with these two lines: `Reply "all" to accept every recommendation, or "all except Q3: b".` and `Or run /mstack:ask-me decide to take this round one dialog at a time.`
+Word every question so that "yes" accepts the recommendation. End each round with these two lines: `Reply "all" to accept every recommendation, or "all except Q3: b".` and `Or run /mstack:ask-me to take this round one dialog at a time.`
 
-The user answers as `A1: ...`. Treat "your suggestion", "your recommendation" and "yes" as accepting the recommendation.
+The user answers as `A1: ...`. Treat "your suggestion", "your recommendation" and "yes" as accepting the recommendation. When the user runs the `mstack:ask-me` skill on a round, it records the answers, changes nothing and returns them in the same form. Check them as step 3 says, then go on with the next round, or with step 4 when no decision is left.
 
 ## 3. Push back once
 
@@ -44,18 +44,20 @@ When the user uses a term in a different sense than the code or the docs do, nam
 
 ## 4. Finish
 
-The session is done when no unsettled decision remains. Ask once whether anything is missing, then write the summary:
+The session is done when no unsettled decision remains. Write the summary:
 
 | Decision | Choice | Reason |
 |---|---|---|
 
-Follow the table with the open items, each with an owner, and what is out of scope.
+Follow the table with the open items, each with an owner, and what is out of scope. When the user passed `docs`, or the grill checklist gives a record format, write what step 5 asks for now. A checklist format means one record in every session, also without `docs`. Leave the files uncommitted and name their paths below the table.
 
-Do not change code, create issues or open PRs until the user says so.
+Then ask once whether anything is missing or wrong, and correct the summary and the records by the answer. When a calling skill says that an approval stop of its own follows this one, leave the question out. Hand the summary and the paths back, and the caller's stop covers both.
+
+Do not change code, create issues or open PRs until the user says so. The files that step 5 writes are the only ones this skill writes before that.
 
 ## 5. Docs mode
 
-Only when the user passed `docs`, or when the repo's grill checklist gives a record format. With such a format, write one record in it at the end of every session, where the checklist says, and update what else it names. When the checklist says which decisions get a record, follow it in place of the three conditions below. Record decisions in the format the repo already uses: `docs/adr/`, `docs/decisions/`, a glossary file, or whatever the repo's CLAUDE.md or AGENTS.md names. Create files only when there is something to write. If the repo has no convention, ask where decisions should go before writing the first one.
+Only when the user passed `docs`, or when the repo's grill checklist gives a record format. With such a format, write one record in it in step 4 of every session, where the checklist says, and update what else it names. When the checklist says which decisions get a record, follow it in place of the three conditions below. Record decisions in the format the repo already uses: `docs/adr/`, `docs/decisions/`, a glossary file, or whatever the repo's CLAUDE.md or AGENTS.md names. Create files only when there is something to write. If the repo has no convention, ask where decisions should go before writing the first one.
 
 Record a decision only when all three hold:
 

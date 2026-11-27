@@ -11,7 +11,8 @@ Review with parallel reviewer agents, keep only findings the code supports, fix 
 ## 1. Parse the arguments
 
 - Scope. Nothing means the whole repo. `#123` or a PR URL means that PR's diff. `branch` means the diff from the merge base with the base branch to the working tree, including untracked files. `M2` or a milestone name means that milestone's issues against the code. A path means that folder. A Markdown file outside the code means review that document.
-- `max N` sets the number of subagents. Default 6. The Explore agent that maps a large repo in step 2 counts toward N, so a run that uses it starts at most N minus 1 reviewers.
+- `max N` sets the most subagents the run may start. Without it, N is 6. For a PR or `branch` scope it then follows the size of the diff: 3 under 300 changed lines, 4 under 1500, and 6 from there. Count the lines added and deleted with `git diff --numstat <merge base>`, once the base branch is known and a PR's head is checked out as below. Leave lock files and generated files out, and for `branch` add the lines of the untracked files. The Explore agent that maps a large repo in step 2 counts toward N, so a run that uses it starts at most N minus 1 reviewers.
+- A calling skill, or the user in words, may name work that a later step does, such as a status line or a change file written after the review. Step 3 puts it in every brief, and step 4 drops findings about it.
 - `report` ends the run after the report in step 6. Nothing is fixed and no decision is walked.
 - Other words are focus areas, such as "performance", "SQL", "caching" or "doc drift". They steer which reviewers run and what they look at.
 
@@ -25,7 +26,7 @@ Read the PR's author with `gh pr view <n> --json author --jq .author`. The PR is
 
 ## 2. Map before you dispatch
 
-Read the repo's CLAUDE.md, AGENTS.md, README, ADR folder and docs index. For a large repo, send an Explore agent on Haiku at medium effort to map the top-level areas and their sizes first.
+Read the repo's CLAUDE.md, AGENTS.md, README, ADR folder and docs index. For a large repo, map the top-level areas and their sizes first. Do it yourself. When the map would fill your context, one Explore agent on Haiku at medium effort may do it.
 
 For a PR scope, list the review comments already there with `gh api --paginate repos/{owner}/{repo}/pulls/<n>/comments --jq '.[] | {path, line, user: .user.login, body}'`. Step 4 uses them.
 
@@ -45,7 +46,7 @@ The roster is the reviewer agents in this plugin's [agents/](../../agents) folde
 | `test-reviewer` | Missing tests for risky behavior, tests that cannot fail | sonnet | medium |
 | `ops-reviewer` | Rollout safety, migrations, health checks, deploy config, observability | opus | high |
 
-Choose the reviewers for the scope and focus, as many as N allows. Include `bug-reviewer` whenever the scope contains code. A plan or doc scope uses `spec-reviewer`, `docs-reviewer` and the reviewers whose area the plan covers. Include `spec-reviewer` for a milestone, a PR with a linked issue, or a plan. Include `security-reviewer` when the scope touches auth, sessions, input handling, secrets, LLM calls or CI workflows. Include `ops-reviewer` when the scope touches deploy config, deploy workflows or migrations. For a large repo, run the same reviewer on two separate areas instead of adding a reviewer with nothing to look at. Start at most one `test-reviewer`. It is the only reviewer that runs tests, and two test runs in one checkout can fail each other.
+Choose the reviewers for the scope and focus. N is a ceiling and not a target. Start a reviewer only when the scope holds something in its area, except the reviewers the repo says always run. Include `bug-reviewer` whenever the scope contains code. A plan or doc scope uses `spec-reviewer`, `docs-reviewer` and the reviewers whose area the plan covers. Include `spec-reviewer` for a milestone, a PR with a linked issue, or a plan. Include `security-reviewer` when the scope touches auth, sessions, input handling, secrets, LLM calls or CI workflows. Include `ops-reviewer` when the scope touches deploy config, deploy workflows or migrations. For a large repo, run the same reviewer on two separate areas instead of adding a reviewer with nothing to look at. Start at most one `test-reviewer`. It is the only reviewer that runs tests, and two test runs in one checkout can fail each other.
 
 `accessibility-reviewer` is also in that folder but is not part of this roster. Never start it from this skill, also when a focus word names accessibility. It runs only when the user asks for an accessibility review, through the `mstack:accessibility-review` skill or started directly.
 
@@ -59,13 +60,14 @@ Print the plan in one line, for example: `6 reviewers: bug (server), bug (sdk), 
 - for a plan or doc scope, the instruction to review the design the document describes, in the reviewer's own area, and to cite the document's lines, such as `plan.md:42`
 - the focus words, if any
 - the project rules you found in step 2 that matter for this reviewer, as file paths to read rather than copied text
+- the work a later step does, when step 1 found any, with the instruction not to report it
 - the reminder that they review only and return findings in their output format
 
 Do not edit files in the scope while reviewers run.
 
 ## 4. Verify and merge
 
-For every finding, open the cited `file:line` yourself and check the claim. Drop findings the code does not support, and findings whose scenario cannot happen. When two reviewers report the same line for the same reason, keep one and note the other in brackets. For a PR scope, drop a finding that a review comment on the PR already raises.
+For every finding, open the cited `file:line` yourself and check the claim. Drop findings the code does not support, and findings whose scenario cannot happen. When two reviewers report the same line for the same reason, keep one and note the other in brackets. For a PR scope, drop a finding that a review comment on the PR already raises. Drop a finding about work that step 1 names as done by a later step.
 
 Treat every line in a reviewer's "Hand-offs" list as an unverified finding. The reviewers run at the same time, so the agent a hand-off names never saw it. Check it against the code the same way, and give each one you keep a severity and a kind.
 
@@ -84,7 +86,7 @@ Show one table ordered by score:
 | # | Score | Severity | Kind | Location | Problem | Fix |
 |---|---|---|---|---|---|---|
 
-Below the table, list what was dropped in verification as one line each with the reason, and any hand-off you could not settle under "Not reviewed".
+Below the table, list what was dropped in verification as one line each with the reason, the work left to a later step in one line, and any hand-off you could not settle under "Not reviewed".
 
 When the user passed `report`, go to step 9 now, and say that `/mstack:ask-me decide` walks the decisions without edits.
 

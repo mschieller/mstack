@@ -63,15 +63,15 @@ Without `resume`, write `<dir>/<yyyy-mm-dd>-<slug>.md`. The slug names the task 
 
 - Write facts. Leave out the story of how you got here.
 - Write no secret, token or password into the note.
-- The note holds no code. Uncommitted changes stay in their worktree, so name that worktree and the files.
-- When a skill calls this one, it gives its name and its next step for the Skill line, and what it has not finished.
+- The note holds no source code. A command to run is fine. Uncommitted changes stay in their worktree, so name that worktree and the files.
+- When a skill calls this one, it gives its name and its next step for the Skill line, the issue or record it works on for the Ref line, and what it has not finished.
 - When a gotcha will matter to every later session, also propose a line for the repo's CLAUDE.md.
 
 End by telling the user the note's path and how to pick it up: `/mstack:handoff resume <slug>`.
 
 ## Resume
 
-With `resume`, list the notes newest first with `ls -t "$dir"`. When the folder does not exist, say that there are no notes. Take the newest note whose file name or first line matches the other words in the arguments. With no other words, take the newest note whose Branch line names the current branch. When nothing matches, say so, list the file names and load nothing. A skill that called this one then goes on from its own start. When several notes match, say which one you took and name the others.
+With `resume`, list the notes newest first with `ls -t "$dir"`. When the folder does not exist, say that there are no notes. Take the newest note that holds every other word in the arguments, each in its slug, its first line or its `Ref:` line. The slug is the file name after its date. An argument with hyphens in it is one word. Case does not count, and a word matches only when no letter or digit touches it, so `F-004` matches `f-004-login` and not `f-0040`. With no other words, take the newest note whose Branch line names the current branch. When nothing matches, say so, list the file names and load nothing. A skill that called this one then goes on from its own start, unless a listed note is plainly its task. It then runs `resume` again with that note's slug. When several notes match, say which one you took and name the others.
 
 Read the note, then check its State against the repo before you trust it:
 

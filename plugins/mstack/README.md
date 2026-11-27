@@ -14,10 +14,10 @@ Each skill triggers from its description, or you call it as `/mstack:<skill>`. T
 | Skill | What it does | Arguments |
 |---|---|---|
 | [grill](skills/grill/SKILL.md) | Settles every decision in a plan through rounds of numbered questions | The plan, issue or topic. `docs` first also records the decisions in the repo. `issues` first also drafts GitHub issues |
-| [ask-me](skills/ask-me/SKILL.md) | Walks a list of findings or proposals one item at a time | Item numbers or a section name narrow the list. `decide` records the answers and changes nothing on disk |
+| [ask-me](skills/ask-me/SKILL.md) | Walks a list of findings or proposals one item at a time | Item numbers or a section name narrow the list. `decide` records the answers and changes nothing on disk. On an open `grill` round it works as under `decide` without the word |
 | [architecture](skills/architecture/SKILL.md) | Finds restructuring candidates, settles the ones you pick and builds them | An area, a folder or `#123` for a PR. `drastic` widens the question to the whole service |
 | [review](skills/review/SKILL.md) | Reviews the current branch or PR in one context before it ships | `#123` for a PR. `report` stops after the report. Other words are focus areas |
-| [deep-review](skills/deep-review/SKILL.md) | Reviews a repo, PR, milestone or plan with parallel reviewer agents | A scope: `#123`, `branch`, `M2` for a milestone, a path or a plan file. `max N` sets the number of subagents, 6 by default. `report` changes nothing. Other words are focus areas |
+| [deep-review](skills/deep-review/SKILL.md) | Reviews a repo, PR, milestone or plan with parallel reviewer agents | A scope: `#123`, `branch`, `M2` for a milestone, a path or a plan file. `max N` sets the most subagents. The default is 6, and for a PR or `branch` scope 3 under 300 changed lines and 4 under 1500. `report` changes nothing. Other words are focus areas |
 | [docs-review](skills/docs-review/SKILL.md) | Checks the docs against each other and against the code | `docs` or `code` runs one pass only. `report` changes nothing. Doc names or areas narrow the findings |
 | [accessibility-review](skills/accessibility-review/SKILL.md) | Reviews a frontend against WCAG 2.2 level AA and gives every criterion a status | URLs of a running app, and paths. `report` changes nothing |
 | [ship](skills/ship/SKILL.md) | Commits, opens or updates the PR, and works until CI is green | An issue number or other context for the PR |
@@ -52,7 +52,7 @@ The skills read the repo's `CLAUDE.md` or `AGENTS.md`. They look for these terms
 
 | Term | Read by | What it gives |
 |---|---|---|
-| grill checklist | `grill` | Questions every plan in the repo must answer, as a list under that heading or a pointer to a file. It may also give a record format, and then `grill` writes one record in that format at the end of every session |
+| grill checklist | `grill` | Questions every plan in the repo must answer, as a list under that heading or a pointer to a file. It may also give a record format, and then `grill` writes one record in that format in every session, with or without `docs` |
 | test command | `tdd`, `bug` | How to run one test, and how to run the tests of a package or module |
 | test layers | `tdd`, `bug` | The kinds of test the repo requires. `bug` takes "the layer that should have caught it" from this list |
 | commit rules | `ship`, and through it `tdd`, `bug` and `audit` | Types, scopes, title lengths and footers. They win over the defaults, except for the language |
@@ -96,6 +96,21 @@ A repo that blocks risky git commands with a hook has to let these through:
 
 The skills never use a plain `--force`, never push to the default branch unless you ask, never use `--no-verify` on any other commit, and never run `git stash` or `git reset --hard`.
 
+## What a calling skill can hand over
+
+A skill of your own that calls these skills can pass them the following.
+
+| To | What it hands over | What the skill does with it |
+|---|---|---|
+| `ship` | The tree hash its checks ran on | Skips its own checks when the tree still has that hash and nothing is uncommitted |
+| `ship` | A draft of the title, the Summary or the Changes, and a section for the PR body | Keeps the facts of the draft in its own format, and copies the section word for word at the end of the body |
+| `ship` | A layer plan for a stack | Opens the stack by that plan without asking for one |
+| `deep-review` | Work that a later step does, such as a status line it updates after the review | Tells the reviewers not to report it, and names it in one line of the report |
+| `grill` | That an approval stop of its own follows | Writes the summary and the records, and leaves the closing question to that stop |
+| `tdd`, `bug` | That it already ran `mstack:handoff resume` | Does not run it again |
+| `handoff` | Its name, its next step and the issue or record it works on | Writes them in the note's Skill and Ref lines, and `resume` loads that skill at that step |
+| `ask-me` | A list of findings, and a rule for what follows each answer, such as a commit | Walks the list, follows the rule and returns the outcomes |
+
 ## What is stable
 
 Other repos call these by name, so they change only with a new major version, and before 1.0 with a new minor version:
@@ -105,6 +120,8 @@ Other repos call these by name, so they change only with a new major version, an
 - the terms under "What a repo can tell mstack"
 - the reviewer output format
 - `mstack:handoff resume`
+
+The hand-overs under "What a calling skill can hand over" are not stable yet, apart from `mstack:handoff resume` itself, and may change in any release before 1.0.
 
 Each release has a tag and release notes on GitHub.
 

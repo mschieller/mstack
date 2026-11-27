@@ -47,8 +47,8 @@ Overrides are under `overrides` in `pnpm-workspace.yaml`, or under `pnpm.overrid
 
 ## Package manager version
 
-`packageManager` in `package.json` names the pnpm version CI installs. `pnpm audit` does not check it. Update it to the newest release of its current major that is older than the repo's `minimumReleaseAge`. `npm view pnpm time --json` gives the release times. pnpm refuses to run a version of itself that is younger than the release age, and then every pnpm command fails. Report a newer release that was too young. Before the update, list the advisories for the current version with `gh api '/advisories?ecosystem=npm&affects=pnpm@<version>'`, and record the ones the update closes for the summary. When only a newer major fixes an advisory, treat that major like any other major in step 9 of the skill.
+`packageManager` in `package.json` names the pnpm version CI installs. `pnpm audit` does not check it. Update it to the newest release of its current major that is older than the repo's `minimumReleaseAge`. `npm view pnpm time --json` gives the release times. pnpm refuses to run a version of itself that is younger than the release age, and then every pnpm command fails. Report a newer release that was too young. After the change, pnpm downloads that version into its own tool folder and runs every later command on it, so run the baseline scripts once more before the commit. Before the update, list the advisories for the current version with `gh api '/advisories?ecosystem=npm&affects=pnpm@<version>'`, and record the ones the update closes for the summary. When only a newer major fixes an advisory, treat that major like any other major in step 9 of the skill.
 
 ## Build scripts
 
-Current pnpm runs the build script of a dependency only when the repo allows it. When an install reports a build script it did not run for a dependency this run added or updated, report it. Do not allow it yourself.
+Current pnpm runs the build script of a dependency only when the repo allows it. When an install reports a build script it did not run for a dependency this run added or updated, report it. `pnpm ignored-builds` lists them. Do not allow it yourself.

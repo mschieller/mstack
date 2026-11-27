@@ -11,9 +11,9 @@ Do the whole job in one run and stop at the summary. The user reads it and confi
 
 - Commit locally, one commit per unit, in the order of the steps below. A stack can then be cut at commit boundaries.
 - Before the first commit, read the title rules in step 3 of the `mstack:ship` skill, the repo's commitlint config and `git log --oneline -20`. Take the language from ship's step 3, and the types, scopes and lengths from the commitlint config and the log. Write every commit title in that form, so that no title needs a rewrite before the push.
-- Run the repo's formatter on each file the run writes, before the commit that adds it: the repo's `format` script, or the formatter the repo uses, such as Prettier or Biome.
+- Run the repo's formatter on each file the run writes, before the commit that adds it: the repo's `format` script, or the formatter the repo uses, such as Prettier or Biome. Give it only the files the run wrote. When the repo has no formatter for a file type, write the file in the style of its neighbours and run nothing.
 - Never push the audited repo or open a PR in it before the user has confirmed the ship in step 12.
-- When a script or check needs Docker and `docker info` fails, record it as not run, and say in the summary that CI runs it. Never start, stop or poll Docker.
+- When a script or check needs Docker and `docker info` fails, record it as not run, and say in the summary that CI runs it. Run `docker info` only when a check you are about to run needs Docker. Docker is available when it exits with 0. Never start, stop or poll Docker.
 
 ## Ecosystems
 
@@ -31,8 +31,8 @@ Change no tracked file in this step. It creates the branch, installs and runs th
 - Run `git status --short`. If the tree has uncommitted changes, add that to the questions in step 2. If the current branch is the default branch, create `chore/audit` from it, or `chore/audit-2` and so on when an earlier run left that name taken. Find the default branch with `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`. Record the merge base with it, `git merge-base HEAD origin/<default>`, for steps 10 and 12. Record `git rev-parse HEAD` as the start of the run, before any commit, for the rebase in step 10. When the run started on the default branch and `git log origin/<default>..HEAD` lists commits, add that to the questions in step 2.
 - Find the ecosystems the repo has, from the list under [Ecosystems](#ecosystems). Read the file of each one now, with its rules, before the survey goes on.
 - Do the ecosystem part.
-- Read the repo's open Dependabot alerts with `gh api --paginate 'repos/<owner>/<repo>/dependabot/alerts?state=open'`. Record each one's ecosystem, package, `manifest_path` and advisory id. When the call fails, alerts are off or the token lacks access, so record the message for the summary.
-- Find who owns the repo with `gh api repos/<owner>/<repo> --jq '.owner.login, .owner.type'`. Record the login for steps 4 and 7. The type is `Organization` or `User`.
+- Find the repo's name with `gh repo view --json nameWithOwner --jq .nameWithOwner`. It is the `<owner>/<repo>` of the calls below. Find who owns the repo with `gh api repos/<owner>/<repo> --jq '.owner.login, .owner.type'`. Record the login for steps 4 and 7. The type is `Organization` or `User`.
+- Read the repo's open Dependabot alerts with `gh api --paginate 'repos/<owner>/<repo>/dependabot/alerts?state=open'`. Record each one's ecosystem, package, `manifest_path` and advisory id. When the call fails, record the message for the summary. It says whether alerts are off or the call was refused for another reason.
 - In a repo that an org owns, look for a `CODEOWNERS` file in `.github/`, at the root and in `docs/`, the three places GitHub reads. When there is none, collect candidates for the question in step 2: the user's own login from `gh api user`, and the user's teams from `gh api user/teams`, filtered to that org and to the teams that pass the access check in step 3. In a repo that a user owns, skip this item, the code owners question and step 3, because one owner for everything changes nothing there.
 - Record two facts about update bots:
   - whether `.github/dependabot.yml` exists, and which ecosystems and directories its entries cover
@@ -121,22 +121,22 @@ Do the ecosystem part. It moves the runtime the repo builds and runs on, such as
 
 ## 7. Workflows
 
-This step covers every `uses:` in `.github/workflows/` and in the repo's own `action.yml` and `action.yaml` files. Skip local paths such as `./.github/actions/build` and `docker://` images.
+This step covers every `uses:` in `.github/workflows/` and in the repo's own `action.yml` and `action.yaml` files. Skip local paths such as `./.github/actions/build` and `docker://` images. When the repo has no `uses:`, skip this step and make no commit.
 
 - A reference to an action or a reusable workflow that belongs to the repo's owner, from the survey, stays as it is, whether it names a branch, a tag or a SHA. The same owner controls both, and a pin would keep the owner's fixes from reaching the repo. List these references in the summary.
 - Every other reference gets pinned as described below, GitHub's own actions included.
 
 To pin an action:
 
-- Take the highest version among the releases at least 3 days old. A release that is broken, or that an attacker published, is usually pulled within days, and Dependabot waits the same 3 days before it offers a version update. `gh api --paginate repos/<owner>/<repo>/releases` lists them with `published_at`, but not in version order, since a backport to an old major can come first. Skip drafts and prereleases. When the repo has no releases, take the highest version tag.
+- Take the highest version among the releases at least 3 days old. A release that is broken, or that an attacker published, is usually pulled within days, and Dependabot waits the same 3 days before it offers a version update. `gh api --paginate repos/<owner>/<repo>/releases` lists them with `published_at`, but not in version order, since a backport to an old major can come first. Skip drafts and prereleases. This prints the rest in version order with their dates: `gh api --paginate repos/<owner>/<repo>/releases --jq '.[] | select((.draft or .prerelease) | not) | "\(.tag_name) \(.published_at)"' | sort -V`. When the repo has no releases, take the highest version tag.
 - Resolve the tag with `gh api repos/<owner>/<repo>/commits/<tag> --jq .sha`. This endpoint follows an annotated tag to its commit.
 - Write the reference as `<owner>/<repo>/<path>@<full sha> # <tag>`, keeping the path when the reference has one, such as `/init` in `github/codeql-action/init`, and with the full tag such as `v4.2.1`. Dependabot updates the SHA and the comment together.
 
-When a reference would move to a new major, read the release notes between the two versions. Compare the inputs the workflow passes and the outputs it reads with `action.yml` or `action.yaml` in the action's path at the new tag, fetched with `gh api -H 'Accept: application/vnd.github.raw' 'repos/<owner>/<repo>/contents/<path>/action.yml?ref=<tag>'`. For a reusable workflow, compare with its `on.workflow_call` block. Take the major when each one still exists with the same meaning. An input or output that the new version marks as deprecated counts as changed. Otherwise take the newest version in the current major. Record the major for step 9 when the version the repo ends up on has an advisory, or when the latest run of the workflow has an annotation that the action's Node runtime is deprecated. `gh run view <run-id>` lists the annotations. Record it for the summary otherwise.
+When a reference would move to a new major, read the release notes between the two versions. Compare the inputs the workflow passes and the outputs it reads with `action.yml` or `action.yaml` in the action's path at the new tag, fetched with `gh api -H 'Accept: application/vnd.github.raw' 'repos/<owner>/<repo>/contents/<path>/action.yml?ref=<tag>'`. For a reusable workflow, compare with its `on.workflow_call` block. Take the major when each one still exists with the same meaning. An input or output that the new version marks as deprecated counts as changed. A breaking change in the release notes that touches no input or output the workflow uses, such as a higher runner minimum, does not stop the major. Name it in the summary. Otherwise take the newest version in the current major, and record the major that was not taken. It goes to step 9 when the version the repo stays on has an advisory, or when the latest run of the workflow has an annotation that the action's Node runtime is deprecated, which `gh run view <run-id>` lists. In every other case it goes to the summary.
 
 Check each action against the GitHub Advisory Database at the version the repo ends up on: `gh api '/advisories?ecosystem=actions&affects=<owner>/<repo>@<version>'`, with the version written without a leading `v`. When an advisory has a fixed version in the current major, take that version or newer. When only a new major fixes it, record that major for step 9.
 
-Commit when done.
+Commit when done. A major that this step took is part of this commit.
 
 ## 8. Updates and fixes
 
@@ -165,7 +165,7 @@ Write a brief for each major that is not free, whether it is a dependency, Node 
 - the breaking changes that hit the repo, each with its `file:line`, and the edits the upgrade needs
 - for a published package, whether the dependency reaches its public API, from the check below
 
-Show all briefs, then ask with AskUserQuestion in one round, one question per major. A round may take several dialogs. Offer "Upgrade" and "Skip and report", with the one you recommend first.
+Show all briefs, then ask with AskUserQuestion in one round, one question per major. A round may take several dialogs. Offer "Upgrade" and "Skip and report", with the one you recommend first. Recommend the upgrade when the advisory reaches production and the brief lists every edit it needs. Recommend skipping when the package is a dev dependency and the upgrade needs source edits. An ecosystem part may say more.
 
 ### Upgrades
 
@@ -173,7 +173,7 @@ For each approved major:
 
 - Upgrade to the target and make the edits in the brief. For Node, update every place step 6 lists. For an action, update the reference and the inputs and outputs the workflow uses.
 - Run the baseline scripts. When the upgrade needs an edit the brief did not list, or a script that passed before still fails, undo it and record the reason.
-- Commit each major on its own.
+- Commit each major on its own. The type is `fix` when the major closes an advisory in code that ships, and `chore` otherwise.
 
 The ecosystem part holds the rules that free and approved majors follow alike.
 
@@ -183,7 +183,7 @@ Two results, each a label from the lists below. "This PR's changes" answers how 
 
 Start the grading at the end of this step, also when the step had no majors, and go on with step 10 while the agent reads. Wait for its report before step 11. A change that step 10 undoes drops out of the touched set in the summary.
 
-The touched set is every package the run moved, directly or through the lockfile or an override, plus Node and each Docker base image when their version changed. Group transitive packages under their direct parent, so the evidence check runs once per parent. Actions are left out, because the PR's own CI run exercises the workflows. The runtime changes are the direct and transitive packages, Node and the base images: what the app runs with. Dev tools and type packages are listed with their evidence but not counted, because a passing script is the only evidence they can have.
+The touched set is every package the run moved, directly or through the lockfile or an override, plus Node and each Docker base image when their version changed. Group transitive packages under their direct parent, so the evidence check runs once per parent. Actions are left out, because the PR's own CI run exercises the workflows. The runtime changes are the direct and transitive packages, Node and the base images: what the app runs with. Dev tools and type packages are listed with their evidence but not counted, because a passing script is the only evidence they can have. The package manager itself is a dev tool. M counts each direct package once, with the transitive packages under it, plus Node and each base image. A transitive package with a runtime parent and a dev parent goes under the runtime parent. A pin or an override that was removed without a version change is not in the set. A runtime version that the run set for the first time counts as changed.
 
 Evidence for a touched item is a test that would fail if the behavior the repo relies on changed:
 
@@ -192,7 +192,7 @@ Evidence for a touched item is a test that would fail if the behavior the repo r
 - A dev tool or type package, such as a linter, test runner, bundler, type checker or `@types/*`: the baseline script that runs it. A script that ran and passed is full evidence.
 - Node: tests that can fail, which passed on the new version.
 - A base image: a test or CI job that starts the app in the image. A build alone is no evidence.
-- A test that failed in the baseline is no evidence.
+- A test or a script that failed in the baseline is no evidence.
 - A test that cannot fail on a wrong value, or that asserts only on mocks or snapshots, is no evidence. Line coverage counts only together with assertions that check behavior.
 
 This PR's changes, with a count of N runtime changes with evidence out of M:
@@ -206,7 +206,7 @@ The repo's tests looks at the behavior that can break in the repo: business rule
 
 - Good: that behavior has tests that can fail.
 - Has gaps: most of it has, and the gaps are named.
-- Little or none: less than about half of it has, the repo has no tests, or most tests cannot fail.
+- Little or none: less than about half of it has, the repo has no tests, or most tests cannot fail. In a repo with no tests, the gaps are its routes and entry points.
 
 Start one `mstack:test-reviewer` with the Agent tool, in the background, also when the repo has no tests. When the repo has its own `.claude/agents/test-reviewer.md`, set `subagent_type` to `test-reviewer` instead. Omit model and effort, because the agent file sets them. The brief contains:
 
@@ -235,13 +235,14 @@ When the agent fails or returns no result lines, the summary says that the resul
 - When a Dockerfile changed and Docker is available, build the image.
 - When a workflow changed and `actionlint` is installed, run it. When it is not installed, skip it and leave it out of the summary.
 - Trace each new failure to its commit. Fix it there, or undo that commit's change and record why.
+- A tracked file that a script changed in this step goes into the commit that caused the change, when the new version of a tool generates the file. Otherwise restore it with `git restore <path>`.
 - A fix or an undo from this step goes into the commit that caused it, never on top, so that a stack can still be cut at commit boundaries. Commit it with `git commit --fixup=<sha>`, then run `git rebase --autosquash <start of the run>`, with the commit recorded in step 1. Only the commits of this run are in that range. They are not pushed, so rewriting them is safe.
 - Record the audit counts again. These are the "after" numbers.
 - Record `git rev-parse HEAD^{tree}` after the last verify run, after any fixup and autosquash. Ship skips its checks when it pushes this same tree.
 
 ## 11. Summary
 
-In T3 Code, send the summary with `send_to_user` in parts of under 4000 characters, because the tool refuses a longer message.
+When the `send_to_user` tool exists and the run can reach the user, send the summary with it in parts of under 4000 characters, because the tool refuses a longer message.
 
 Report in this order:
 
@@ -258,7 +259,7 @@ Report in this order:
 
 ## 12. Ship
 
-Count the change with `git diff --numstat <merge-base> HEAD`, leaving out lockfiles.
+Count the change with `git diff --numstat <merge-base> HEAD`, as added plus removed lines, leaving out lockfiles.
 
 Pick a single PR when no major upgrade needed source changes and the count is under about 300 changed lines. Otherwise pick a stack, cut at commit boundaries in this order, bottom first:
 
@@ -269,7 +270,7 @@ Pick a single PR when no major upgrade needed source changes and the count is un
 5. updates and fixes
 6. one layer per major that changed source code
 
-Fold a small layer into its neighbour. Say how many layers the stack has and why each one is separate.
+Fold a layer of under about 50 changed lines into its neighbour. Never fold a layer for a major that changed source code. Say how many layers the stack has and why each one is separate.
 
 Ask with AskUserQuestion whether to ship. Name the shape, and offer "Ship" first and "Don't ship yet". Stop when the user picks "Don't ship yet".
 
@@ -277,7 +278,7 @@ Do the ecosystem part, when the file has one, before the hand-over.
 
 Then hand over to the `mstack:ship` skill. Give it the tree hash recorded in step 10, and these drafts for the PR:
 
-- A title that leads with the outcome: how many advisories the run closes, and the largest other change, such as `fix: close 11 advisories and move to node 26`. Its type is that of the updates commit from step 8, or `chore` when there is none.
+- A title that leads with the outcome: how many advisories the run closes, and the largest other change, such as `fix: close 11 advisories and move to Node 26`. With several ecosystems, add up the distinct advisory ids of each. Its type is `fix` when an updates commit from step 8 or a major from step 9 is a `fix`, and `chore` otherwise.
 - A Summary: the advisory counts before the run and the packages they came in through, then what the PR does and the counts it leaves. When the run changed more, one sentence names the other areas.
 - Changes: one bullet per change, with the old and new version and the reason. When step 4 of `mstack:ship` groups the bullets, the labels are Dependencies, Node, and CI and repo config, which holds the workflows, Dependabot and code owners. A lone Node bullet joins Dependencies, and a label with no bullets is left out.
 - After the merge, when the run wrote or changed `dependabot.yml`: where GitHub shows a config error.
@@ -349,8 +350,8 @@ Dev tools, not counted: <name and version> (<the script that passed>).
 
 Fill in the Results rows like this, and change no words of the reviewer's lines:
 
-- Advisories: `None before or after.` when the audit found none. Leave the row out when step 1 skipped the dependency steps. An ecosystem part may give its own row and its own table in place of these. With several ecosystems, the section has one row and one table for each.
-- Dependabot: `<n> open alerts, <m> close when this merges.` when some stay open, and each one that stays gets a row in "Left open". `No open alerts.` or `Alerts are off.` when that is the case.
+- Advisories: `None before or after.` when the audit found none, and `<total before> to 0. None left open.` when the run closed them all. Leave the row out when step 1 skipped the dependency steps. An ecosystem part may give its own row and its own table in place of these. With several ecosystems, the section has one row and one table for each.
+- Dependabot: `<n> open alerts, <m> close when this merges.` when some stay open, and each one that stays gets a row in "Left open". `No open alerts.` or `Alerts are off.` when that is the case, and `Alerts could not be read.` when the call failed for another reason.
 - This PR's changes: leave out the second sentence when the result is Covered or Not covered. Nothing to cover reads `Nothing to cover: the PR has no runtime change.`
 - The repo's tests: Good reads `Good.`
 

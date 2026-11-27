@@ -32,7 +32,7 @@ The summary of a raised peer range says that consumers on an older version of th
 ## Step 1: Survey
 
 - Find the package manager from the `packageManager` field and the lockfile. Read [PNPM.md](PNPM.md) for `pnpm-lock.yaml` and [NPM.md](NPM.md) for `package-lock.json`. With any other package manager, or none, skip steps 5 and 8 and the dependency majors in step 9, skip the install, audit, outdated and override items in this step and in step 10, leave the counts table out of the summary, and say so there.
-- List every `package.json` in the repo and whether the repo is a workspace.
+- List every `package.json` in the repo and whether the repo is a workspace. It is one when `pnpm-workspace.yaml` has a `packages` key or the root `package.json` has `workspaces`.
 - Decide which packages are published. A package is published when it has no `"private": true` and either the registry has it or the repo publishes it. The registry has it when `npm view <name> name` succeeds and either the name is scoped, such as `@scope/name`, or `npm view <name> repository.url` names this repo. An unscoped name can belong to someone else's package, as `app` and `server` do. A restricted package needs the user's npm login, and without it `npm view` answers 404. The repo publishes it when a workflow or script runs `npm publish`, `pnpm publish` or `changeset publish`, or the package has a `publishConfig`. Every other package is an app.
 - Run the frozen install. If it fails because the lockfile does not match `package.json`, add that to the questions in step 2, since every later step needs the install.
 - When the install fails with a 401 or a 404 on a scoped package, run `npm whoami`. A 401 there means the npm login has expired. Ask the user with AskUserQuestion to run `npm login`, then run the install again. Never ask for a token or offer to take one.
@@ -42,13 +42,13 @@ The summary of a raised peer range says that consumers on an older version of th
 - Find every place that sets a Node version: `engines.node`, `.node-version`, `.nvmrc`, `.tool-versions`, `volta`, `node-version` inputs in workflows, every `FROM` in a Dockerfile that names a `node` image, `@types/node` and a `@tsconfig/node<major>` base.
 - Find the active LTS line of Node. In `https://raw.githubusercontent.com/nodejs/Release/main/schedule.json` it is the line whose `lts` date has passed and whose `maintenance` date has not. Its newest release is the first entry in `https://nodejs.org/dist/index.json` whose `lts` field holds that line's codename.
 - When the repo has a `.changeset` folder, find the release tool, `@changesets/cli` and its major in `devDependencies` or pnpm's own `pnpm change`, and with Changesets read `ignore` and `privatePackages` from `.changeset/config.json`. Check the CI workflows for a step that fails a PR without a changeset.
-- Run every script in each `package.json` that tests, lints, typechecks or builds. Record what already fails. This is the baseline for step 10. A `test` script that is npm's placeholder, `echo "Error: no test specified" && exit 1`, is a known failure, recorded without a question. Run `git status --short` again afterwards. A tracked file that was clean before and that a script changed goes back with `git restore <path>`, so it stays out of the first commit.
+- Run every script in each `package.json` that tests, lints, typechecks or builds, in the order the file lists them. Skip a script that only runs other scripts you run anyway, one that writes files, such as a `fix` or `format` script, and one that starts a server. Name each one you skipped. Run them on the Node the repo asks for when the machine has it, and record the Node version they ran on. Record what already fails, by script, since a later run is compared with this one as pass or fail per script and not by its number of errors. This is the baseline for step 10. A `test` script that is npm's placeholder, `echo "Error: no test specified" && exit 1`, is a known failure, recorded without a question. Run `git status --short` again afterwards. A tracked file that was clean before and that a script changed goes back with `git restore <path>`, so it stays out of the first commit.
 - When the repo already measures coverage, through a coverage script or a coverage setting in the test runner's config, run the tests once with coverage and copy the report to the scratchpad for the test grade in step 9. Install no coverage provider. This run is not part of the baseline, so step 10 does not repeat it. Then delete the coverage folder when git does not ignore it and it did not exist before, so it stays out of every commit.
 
 ## Step 2: Questions
 
 - An override with an unknown reason. Offer to treat it as a fix, which step 8 removes when nothing needs it, or as a hold-back, which step 8 keeps. Recommend a fix. The baseline scripts in step 8 catch many wrong removals, while a wrongly kept override stays until someone checks it by hand.
-- Tests that fail before any change, other than npm's placeholder script. Offer to continue with those failures noted, or to stop.
+- Tests that fail before any change, other than npm's placeholder script. Offer to continue with those failures noted, or to stop. Recommend continuing when the failure comes from generated or ignored files, or from a script that tests no app code. Recommend stopping when a test of the app itself fails, because the later steps then cannot tell a broken update from a test that was already broken.
 - A frozen install that fails. Offer to update the lockfile in a first commit of its own, or to stop. Recommend the update, because the repo's CI fails the same way until someone makes it.
 
 ## Step 4: Dependabot
@@ -117,21 +117,23 @@ The summary of a raised peer range says that consumers on an older version of th
 
 ## Step 6: Runtime version
 
-- The target is the newest release of the active LTS line from the survey. A move to a new major must pass the free check in step 9, with the target Node on the `PATH`. When the target Node cannot be put on the `PATH`, the major is not free. When the check fails, take the newest release of the current line instead, and record the major for step 9.
+- The target is the newest release of the active LTS line from the survey. A move to a new major is free when all three hold. The changelog of each major in between removes or changes nothing the repo uses, which a search of the repo for each removed API shows. The `engines.node` of every dependency allows the target. The install succeeds and every baseline script that passed before still passes on the target, with no source edit. Put the target Node on the `PATH` with the version manager the machine has, such as `n`, `nvm`, `fnm` or `volta`. When the target Node cannot be put on the `PATH`, the major is not free. When the check fails, take the newest release of the current line instead, and record the major for step 9. When the repo set no Node version before, there is no move to check, so run the baseline scripts on the target and go on.
 - Update every place from the survey. Write the exact target version, such as `26.13.1`, also in place of a range such as `^26` or `>=24.11.0 <25`, and also when the place already names the target's major. The exception is `engines.node` in a published package, which the bullet below sets. An exact version makes a laptop, CI and the image run the same Node.
 - When the survey found no place that sets a Node version for an app, not counting `@types/node` and a `@tsconfig/node<major>` base, add `engines.node` to the `package.json` next to the lockfile, with the target as an exact version, such as `26.13.1`. Add it to an app in no other case. One place is enough, and each extra place has to be kept in step with the others.
 - In a published package, `engines.node` is the oldest Node its consumers may run, not the Node it builds with. Set it to `>=<major>` of the active LTS line, such as `>=26`. Add it when it is missing, and replace a lower bound whatever form it has, such as `>=18` or `>=22.12`. Leave a bound at or above that major as it is.
 - In a Dockerfile, keep the registry and the image variant and write the exact target version, so `node:26-slim` becomes `node:26.13.1-slim`. Confirm that the tag exists in its registry before you write it.
-- Set `@types/node` to the newest version with the same major as Node. In a published package, `@types/node` and a `@tsconfig/node<major>` base follow the major of the lower bound in its `engines.node` instead. Types and a compile target for a newer Node let code through that the lowest Node it allows cannot run.
+- When the repo sets `packageManager`, run `corepack --version` on the target Node. Newer Node releases do not ship Corepack. When the command fails, say in the summary that CI and each machine need the package manager installed another way.
+- When the repo has `@types/node`, set it to the newest version with the same major as Node that the repo's release-age setting allows. In a published package, `@types/node` and a `@tsconfig/node<major>` base follow the major of the lower bound in its `engines.node` instead. Types and a compile target for a newer Node let code through that the lowest Node it allows cannot run.
+- Run the install, so the lockfile follows the changes.
 - Commit.
 
 ## Step 8: Updates and fixes
 
 Work through these in order and stop as soon as the audit is clean. Move a package only to fix an advisory, and leave every other update to the repo's update bot.
 
-1. Run the audit fix that updates the lockfile. Then compare the lockfile with `HEAD`. A package whose major changed while every package that depends on it kept its version came in through a wide range such as `*`, or through a peer resolution. Treat each one as a major for step 9.
+1. Run the audit fix that updates the lockfile. When it reports that it fixed nothing, which it does for an entry with an exact version, go on to item 2. Then compare the lockfile with `HEAD`. A package whose major changed while every package that depends on it kept its version came in through a wide range such as `*`, or through a peer resolution. Treat each one as a major for step 9.
 2. For each advisory that is left, find which direct dependency pulls the package in. Move that dependency to the newest patch or minor of its current major when that removes the advisory. Below 1.0.0 the minor counts as the major, as a caret range treats it.
-3. When no update within the current major removes the advisory, add an override, but only when the lowest fixed version is in the same major as the version it replaces. Scope the key to the part of the advisory's vulnerable range inside that major, and write the lowest fixed version as the value, such as `"ms@>=2.0.0 <2.1.3": "2.1.3"`. Copies outside the range then keep their version. Record the package, the version and the advisory id for the summary.
+3. When no update within the current major removes the advisory, add an override, but only when the lowest fixed version is in the same major as the version it replaces. Scope the key to the part of the advisory's vulnerable range inside that major, and write the lowest fixed version as the value, such as `"ms@>=2.0.0 <2.1.3": "2.1.3"`. Copies outside the range then keep their version. With several advisories on one package, scope the key to the union of their ranges inside that major, and write the highest of their lowest fixed versions. Record the package, the version and the advisory id for the summary.
 4. An advisory that only a new major fixes, through an override or a direct dependency, goes to step 9.
 
 Item 2 moves only the entry in `dependencies`, `devDependencies` or `optionalDependencies`. A `peerDependencies` entry for the same package keeps its range and changes only by the rule in step 5, the advisory rule below and the rule in step 9.
@@ -155,7 +157,7 @@ Commit when done. The type is `fix` when an update closes an advisory in a packa
 
 ## Step 9: Majors
 
-Attempt a dependency major only when an advisory cannot be fixed without it, whatever its severity and whether the package is a dev dependency. For every other package with a newer major, write one line for the summary with what the major changes for this repo, and leave it for the repo's update bot.
+Attempt a dependency major only when an advisory cannot be fixed without it, whatever its severity and whether the package is a dev dependency. For every other package with a newer major, or below 1.0.0 a newer minor, write one line for the summary with what the major changes for this repo, and leave it for the repo's update bot.
 
 ### Free majors
 
@@ -164,7 +166,7 @@ A major is free when all four hold:
 - In a published package, the dependency does not reach the public API, by the check at the end of this step.
 - The changelog or migration guide between the two versions removes or changes nothing the repo uses. Search the repo for each API, option and default it removes or changes, and check for a switch to ESM only.
 - The new version's `engines.node` and peer dependencies are met without other changes.
-- The install, build, typecheck and baseline scripts pass with no source edit.
+- The install succeeds, and every baseline script that passed before still passes, with no source edit.
 
 ### Targets
 

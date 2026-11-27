@@ -29,6 +29,7 @@ minimumReleaseAge: 1440
 | Update the lockfile without installing | `pnpm install --lockfile-only` |
 
 - Never run bare `pnpm audit --fix`. It writes override keys with no lower bound, such as `minimist@<0.2.4: ^0.2.4`, which move older majors too. Write the overrides for step 8 by hand.
+- `pnpm audit --fix update` can add entries to `minimumReleaseAgeExclude` in `pnpm-workspace.yaml`, to get a release through that is younger than the release age. Run `git diff pnpm-workspace.yaml` after the command and take those entries out again. Then run the frozen install. When it fails because a version is too young, undo the update of that package, leave its advisory open and report it.
 - `pnpm audit --fix update` rewrites a range to start at the version it installs. In an entry that keeps its range, set the lower bound back to the version that fixes the advisory, as step 8 of the skill says.
 - To move a direct dependency, edit its version in `package.json`, or in the catalog when the entry says `catalog:`, and run `pnpm install`. A catalog entry that the Pin section leaves as a range moves like a range in a published package. `pnpm update <name>`, and `pnpm add <name>` without a version, keep a `^` or `~` that the entry already has, also with `saveExact` or `-E`. `pnpm add <name>@<version>` can drop the range and write the bare version, as pnpm 12.21 does with `saveExact`, so never use it on an entry that keeps its range.
 - A `peerDependencies` entry for the same package changes only by the rules in steps 5, 8 and 9 of the skill.
@@ -46,7 +47,7 @@ Overrides are under `overrides` in `pnpm-workspace.yaml`, or under `pnpm.overrid
 
 ## Package manager version
 
-`packageManager` in `package.json` names the pnpm version CI installs. `pnpm audit` does not check it. Update it to the newest release of its current major. Before the update, list the advisories for the current version with `gh api '/advisories?ecosystem=npm&affects=pnpm@<version>'`, and record the ones the update closes for the summary. When only a newer major fixes an advisory, treat that major like any other major in step 9 of the skill.
+`packageManager` in `package.json` names the pnpm version CI installs. `pnpm audit` does not check it. Update it to the newest release of its current major that is older than the repo's `minimumReleaseAge`. `npm view pnpm time --json` gives the release times. pnpm refuses to run a version of itself that is younger than the release age, and then every pnpm command fails. Report a newer release that was too young. Before the update, list the advisories for the current version with `gh api '/advisories?ecosystem=npm&affects=pnpm@<version>'`, and record the ones the update closes for the summary. When only a newer major fixes an advisory, treat that major like any other major in step 9 of the skill.
 
 ## Build scripts
 

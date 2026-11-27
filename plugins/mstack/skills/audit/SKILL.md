@@ -28,7 +28,7 @@ The survey finds the ecosystems the repo has. Where a step says to do the ecosys
 
 Change no tracked file in this step. It creates the branch, installs and runs the baseline scripts, and writes nothing else.
 
-- Run `git status --short`. If the tree has uncommitted changes, add that to the questions in step 2. If the current branch is the default branch, create `chore/audit` from it, or `chore/audit-2` and so on when an earlier run left that name taken. Record the merge base with the default branch, `git merge-base HEAD origin/<default>`, for steps 10 and 12.
+- Run `git status --short`. If the tree has uncommitted changes, add that to the questions in step 2. If the current branch is the default branch, create `chore/audit` from it, or `chore/audit-2` and so on when an earlier run left that name taken. Find the default branch with `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`. Record the merge base with it, `git merge-base HEAD origin/<default>`, for steps 10 and 12. Record `git rev-parse HEAD` as the start of the run, before any commit, for the rebase in step 10. When the run started on the default branch and `git log origin/<default>..HEAD` lists commits, add that to the questions in step 2.
 - Find the ecosystems the repo has, from the list under [Ecosystems](#ecosystems). Read the file of each one now, with its rules, before the survey goes on.
 - Do the ecosystem part.
 - Read the repo's open Dependabot alerts with `gh api --paginate 'repos/<owner>/<repo>/dependabot/alerts?state=open'`. Record each one's ecosystem, package, `manifest_path` and advisory id. When the call fails, alerts are off or the token lacks access, so record the message for the summary.
@@ -45,6 +45,7 @@ Ask everything the survey raised in one round with AskUserQuestion, with the rec
 - Whether to add Dependabot version updates, when the survey found no `dependabot.yml` and no Renovate config. Offer yes and no, and recommend yes, because the exact versions and commit SHAs this run writes go stale when no bot moves them. With no, step 4 is skipped.
 - A missing `CODEOWNERS` file in a repo that an org owns. Ask whether to add one. If yes, ask who owns the code: one owner for everything, or different owners for different paths, and which teams or people. Offer the candidates from the survey and let the user name others. Recommend one team for `*` when the user is in a team with access to the repo.
 - The questions the ecosystem part lists.
+- Commits on the default branch that origin lacks. They would become part of the audit's PR. Offer to stop so the user can push or move them, or to go on with them in the PR. Recommend stopping.
 - Uncommitted changes in the tree. Offer to stop so the user can commit or move them, or to commit them now as a first commit of their own, below every audit commit. Recommend stopping. The run cannot go on with a dirty tree, because the rebase in step 10 refuses one.
 
 After this round the run is unattended until the majors question in step 9, and again after it. When something new comes up, take the option you would have recommended and list it in the summary.
@@ -234,7 +235,7 @@ When the agent fails or returns no result lines, the summary says that the resul
 - When a Dockerfile changed and Docker is available, build the image.
 - When a workflow changed and `actionlint` is installed, run it. When it is not installed, skip it and leave it out of the summary.
 - Trace each new failure to its commit. Fix it there, or undo that commit's change and record why.
-- A fix or an undo from this step goes into the commit that caused it, never on top, so that a stack can still be cut at commit boundaries. Commit it with `git commit --fixup=<sha>`, then run `git rebase --autosquash <merge-base>`. The branch is not pushed, so rewriting it is safe.
+- A fix or an undo from this step goes into the commit that caused it, never on top, so that a stack can still be cut at commit boundaries. Commit it with `git commit --fixup=<sha>`, then run `git rebase --autosquash <start of the run>`, with the commit recorded in step 1. Only the commits of this run are in that range. They are not pushed, so rewriting them is safe.
 - Record the audit counts again. These are the "after" numbers.
 - Record `git rev-parse HEAD^{tree}` after the last verify run, after any fixup and autosquash. Ship skips its checks when it pushes this same tree.
 

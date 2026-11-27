@@ -102,7 +102,7 @@ Applying an answer means all of this, before the next finding:
 - Update the home doc only, and update any status line, register or roadmap the repo keeps.
 - Record a deferred item where the repo records deferred work.
 - Run the repo's checks for what changed before the commit, also when they are slow. The rule in `mstack:ask-me` that moves a slow check to its close does not apply here. Never commit while a check fails that passed at the start.
-- Commit the finding as one commit containing all its edits. Nothing is committed for "Leave as is" or "defer". If you are still on the default branch or a detached HEAD, create a branch first.
+- Commit the finding as one commit containing all its edits, with a title in the form step 3 of the `mstack:ship` skill gives. Nothing is committed for "Leave as is" or "defer". If you are still on the default branch or a detached HEAD, create a branch first.
 
 ## 7. Wrap up
 

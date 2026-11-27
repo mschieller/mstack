@@ -66,4 +66,4 @@ When the user rejects a candidate for a reason a future review would need, offer
 
 Change no code until the user says to build. Then implement one candidate at a time, test through the new interface, replace the tests that tested past it, run the repo's checks, and commit. Hand over to the `mstack:ship` skill when the user wants a PR.
 
-When the work stops with picked candidates not built, write a note with the `mstack:handoff` skill. Give it `architecture` as the skill, the step you are in, the candidates picked and the decisions settled for each.
+When the work stops with picked candidates not built, write a note with the `mstack:handoff` skill. Give it `architecture` as the skill, the step to go on at, the candidates picked and the decisions settled for each.

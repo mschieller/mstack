@@ -14,12 +14,13 @@ A handoff note holds what a new session cannot get from git: the goal, what is h
 
 Notes go in the repo's shared git folder. Every worktree of the repo sees them there, a removed worktree does not take them along, and git can never commit them.
 
+First run `git rev-parse --git-common-dir`. When it fails, there is no repo and no place for a note. Say so, give the note in your reply, and stop. Otherwise:
+
 ```
 dir="$(git rev-parse --path-format=absolute --git-common-dir)/mstack/handoffs"
-mkdir -p "$dir"
 ```
 
-Outside a git repo there is no place for a note. Say so, and give the note in your reply.
+Run `mkdir -p "$dir"` before you write a note, and not for `resume`.
 
 ## Write
 
@@ -29,7 +30,7 @@ Without `resume`, write `<dir>/<yyyy-mm-dd>-<slug>.md`. The slug names the task 
 # <the task in one line>
 
 - Skill: <the skill that was running, or none>, next step: <its step number and name>
-- Ref: <an issue, a PR, a decision record or a feature id, when there is one>
+- Ref: <an issue, a PR or a decision record, when there is one>
 
 ## Goal
 
@@ -70,13 +71,13 @@ End by telling the user the note's path and how to pick it up: `/mstack:handoff 
 
 ## Resume
 
-With `resume`, list the notes newest first with `ls -t "$dir"`. Take the newest one whose file name or first line matches the other words in the arguments. With no other words, take the newest note whose Branch line names the current branch, and otherwise the newest note. When nothing matches, say so and list the file names.
+With `resume`, list the notes newest first with `ls -t "$dir"`. When the folder does not exist, say that there are no notes. Take the newest note whose file name or first line matches the other words in the arguments. With no other words, take the newest note whose Branch line names the current branch. When nothing matches, say so, list the file names and load nothing. A skill that called this one then goes on from its own start. When several notes match, say which one you took and name the others.
 
 Read the note, then check its State against the repo before you trust it:
 
 - the branch exists and its sha is the note's sha or a descendant of it, which `git merge-base --is-ancestor <sha> <branch>` shows by succeeding
 - the files under Uncommitted still have changes in the worktree the note names
 
-Say what differs. Then go on at the note's next step. When its Skill line names a skill, load that skill and start at the step it names. Ask the note's open questions first when the next step depends on them.
+When the branch no longer exists, the sha is not in it, or the worktree is gone, say what differs and ask whether to go on, to start over or to delete the note. Otherwise say what differs, switch to the note's worktree and branch, and go on at the note's next step. When its Skill line names a skill, load that skill and start at the step it names. Ask the note's open questions first when the next step depends on them.
 
 Delete the note when its task is done.

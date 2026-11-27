@@ -35,7 +35,9 @@ Neither scan sees a module that only test files import. `-test` adds the calls t
 ```
 go list -deps -f '{{with .Module}}{{.Path}}{{end}}' ./... | sort -u
 go list -deps -test -f '{{with .Module}}{{.Path}}{{end}}' ./... | sort -u
-``` With several `go.mod` files, keep the counts per `go.mod`, and give their sum where one number is asked for.
+```
+
+With several `go.mod` files, keep the counts per `go.mod`, and give their sum where one number is asked for.
 
 The module `stdlib` is the Go standard library, and its `version` is the Go release that ran the scan, which `go version` prints in that folder. A `stdlib` finding is fixed by step 6, not by `go get`. In a library, leave the `stdlib` findings out of every count, before and after. They follow the Go on the machine and say nothing about the module.
 

@@ -46,7 +46,7 @@ When you started the app and the user gave no URL, check a second page too, so t
 
 Start `mstack:accessibility-reviewer` three times, once for each group: Interaction, Semantics and Perception. The groups and their criteria are in [the agent file](../../agents/accessibility-reviewer.md), and each run reports only its group. The agent file sets model and effort, so omit both on the calls.
 
-With a URL, run the three one after another. They share one browser, and a second reviewer would navigate the first one's page away. Before each one, check with `curl` that the first URL still answers. When a reviewer reports that a page stopped answering, start the app again if you started it, and run that reviewer again. With source only, launch all three in a single message.
+With a URL, run the three one after another. They share one browser, and a second reviewer would navigate the first one's page away. Before each one, check with `curl` that the first URL still answers. When a reviewer reports that a page stopped answering, start the app again if you started it, and run that reviewer again. With source only, launch all three in a single message, and tell only the Interaction run to run the repo's accessibility lint and tests, so that three runs do not start them at once.
 
 Each brief contains:
 
@@ -95,7 +95,7 @@ When the user passed `report`, go to step 8 now, and say that `/mstack:ask-me de
 
 If the working tree is on the default branch or a detached HEAD, create a branch first. Fix each mechanical finding with the smallest change. Run the repo's checks for the touched files, and its accessibility lint and tests if it has them. When the app is running, repeat the measurement behind each fixed finding and confirm it now passes.
 
-Commit the fixes in logical groups, with messages that say what each group fixes, and stage only the files your fixes touched. If tracked files had uncommitted changes when the review started, do not commit. Leave the fixes in the tree and say so.
+Commit the fixes in logical groups, each with a title in the form step 3 of the `mstack:ship` skill gives, and stage only the files your fixes touched. If tracked files had uncommitted changes when the review started, do not commit. Leave the fixes in the tree and say so.
 
 If a fix turns out to need a decision, move it to step 7.
 
@@ -103,7 +103,7 @@ If a fix turns out to need a decision, move it to step 7.
 
 Hand the decision findings to the `mstack:ask-me` skill, most severe first. It sets how each one is asked and applied. These rules add to it.
 
-Commit each applied answer as one commit, staging only the files it touched. Nothing is committed for an answer that changes no file. The commit rules of step 6 hold here too.
+Commit each applied answer as one commit with a title in that form, staging only the files it touched. Nothing is committed for an answer that changes no file. The commit rules of step 6 hold here too.
 
 Third-party lines are not walked, because the repo cannot fix them. They stay in the final summary with their owner.
 

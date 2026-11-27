@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: Build a behaviour change test-first, in red-green-refactor slices with one commit per slice. Use when implementing a feature or a fix from acceptance criteria, an issue or a plan, or when the user says "tdd" or "test first".
+description: Build a behaviour change test-first, in red-green-refactor slices with one commit per slice. Use when the user says "tdd" or "test first", or asks to build an issue or a plan test-first, and when another skill hands over a list of acceptance criteria to build.
 argument-hint: "[issue number, plan file or the behaviour to build]"
 ---
 
@@ -12,21 +12,22 @@ Work one vertical slice at a time: a thin path through every layer it needs, pro
 
 ## Before the first slice
 
-- Look for a handoff note for this task with the `mstack:handoff` skill and `resume`. When one exists, start at its next step.
-- Find the test command. The repo's CLAUDE.md or AGENTS.md gives it as its test command. Otherwise take it from the package scripts, the Makefile or the CI workflow. Find the form that runs one test, and the form that runs the package or module you are in.
+- Run the `mstack:handoff` skill with `resume` and the issue number or the slug of this task. When it finds a note, start at the note's next step. When it finds none, go on. Skip this bullet when `mstack:handoff resume` loaded this skill.
+- Find the test command. The repo's CLAUDE.md or AGENTS.md gives it as its test command. Otherwise take it from the package scripts, the Makefile or the CI workflow. Find the form that runs one test, and the form that runs the package or module you are in. When the repo has no test runner or no way to run one test, stop and ask whether to set one up, and name the runner you would pick.
+- Run the tests of the package or module once and record what already fails.
 - Find the slices. They are the acceptance criteria of the issue, the decision record or the plan that the arguments name, one slice for each. When none are written down, write them as one line each, "given, when, then", show the list to the user and wait for an OK.
 - On the default branch, create a branch in the form step 1 of the `mstack:ship` skill gives.
 
 ## Loop
 
 1. Pick the next slice. Take the smallest first, which is often the plain successful case, then the errors, then the edge cases.
-2. Red. Write the test and run it. It must fail for the right reason, so read the failure message. A test that fails on a typo or a missing import does not count.
+2. Red. Write the test and run it. It must fail for the right reason, so read the failure message. A test that fails on a typo or a missing import does not count. When the new test passes at once, the behaviour already exists. Keep the test only when no other test covers the case, commit it with the type `test`, and go on to the next slice.
 3. Green. Write the least code that makes it pass. A hard-coded value is fine when the next test will force the general form.
 4. Refactor with the tests green. Remove the duplication you created, not duplication elsewhere.
-5. Run the tests of the whole package or module, not only the new one.
-6. Commit the slice, the test and the code together, with a title in the form step 3 of the `mstack:ship` skill gives.
+5. Run the tests of the whole package or module, not only the new one. A test that failed before the first slice does not block the loop.
+6. Commit the slice, the test and the code together, staged by path, with a title in the form step 3 of the `mstack:ship` skill gives.
 
-Repeat until the list is done. When the repo's CLAUDE.md or AGENTS.md names test layers, check which of them the change needs beyond the tests the loop produced, and add those.
+Repeat until the list is done. When the repo's CLAUDE.md or AGENTS.md names test layers, check which of them the change needs beyond the tests the loop produced, and add those, each committed as a slice of its own.
 
 ## Rules
 
@@ -37,8 +38,8 @@ Repeat until the list is done. When the repo's CLAUDE.md or AGENTS.md names test
 
 ## When you stop
 
-When the loop has to stop before the list is done, write a note with the `mstack:handoff` skill. Give it `tdd` as the skill, the next slice as the next step, and the slices that are left.
+When the loop has to stop before the list is done, write a note with the `mstack:handoff` skill. Give it `tdd` as the skill, "Loop, step 1" as the next step, and the slices that are left.
 
 ## Report
 
-Each slice with its test and its commit, the slices that are left, and anything you could not test.
+Each slice with its test and its commit, the slices that are left, and anything you could not test. When the list is done, delete this task's handoff note, if one exists.

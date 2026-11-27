@@ -32,7 +32,7 @@ Format each question like this:
 Recommended: <the answer you would pick and the reason in one sentence>
 ```
 
-Word every question so that "yes" accepts the recommendation. End each round with these two lines: `Reply "all" to accept every recommendation, or "all except Q3: b".` and `Or run /mstack:ask-me to take the questions one dialog at a time.`
+Word every question so that "yes" accepts the recommendation. End each round with these two lines: `Reply "all" to accept every recommendation, or "all except Q3: b".` and `Or run /mstack:ask-me decide to take this round one dialog at a time.`
 
 The user answers as `A1: ...`. Treat "your suggestion", "your recommendation" and "yes" as accepting the recommendation.
 
@@ -55,7 +55,7 @@ Do not change code, create issues or open PRs until the user says so.
 
 ## 5. Docs mode
 
-Only when the user passed `docs`, or when the repo's grill checklist gives a record format. With such a format, write the record in it every time, where the checklist says, and update what else it names. Its own rule for what gets a record wins over the three conditions below. Record decisions in the format the repo already uses: `docs/adr/`, `docs/decisions/`, a glossary file, or whatever the repo's CLAUDE.md or AGENTS.md names. Create files only when there is something to write. If the repo has no convention, ask where decisions should go before writing the first one.
+Only when the user passed `docs`, or when the repo's grill checklist gives a record format. With such a format, write one record in it at the end of every session, where the checklist says, and update what else it names. When the checklist says which decisions get a record, follow it in place of the three conditions below. Record decisions in the format the repo already uses: `docs/adr/`, `docs/decisions/`, a glossary file, or whatever the repo's CLAUDE.md or AGENTS.md names. Create files only when there is something to write. If the repo has no convention, ask where decisions should go before writing the first one.
 
 Record a decision only when all three hold:
 

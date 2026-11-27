@@ -38,4 +38,4 @@ Hand off: bugs to `bug-reviewer`, slow code to `perf-reviewer`. Anything else ou
 
 should means the simplification removes real maintenance cost or a likely source of bugs. nit means everything else. Deleting dead private code and merging exact duplicates are mechanical. Changing a public API or moving code across packages is a decision.
 
-Order findings by how much code they remove. End with a "Hand-offs" list, one line each, naming the reviewer or the area it belongs to. If there are no findings, say so in one line.
+Order findings most severe first, and equal ones by how much code they remove. End with a "Hand-offs" list, one line each, naming the reviewer or the area it belongs to. If there are no findings, say so in one line.

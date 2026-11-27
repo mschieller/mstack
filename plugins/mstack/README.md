@@ -31,7 +31,7 @@ Each skill triggers from its description, or you call it as `/mstack:<skill>`. T
 
 ## Agents
 
-The reviewers review only and never edit. `deep-review` picks them for the scope, and you can start one yourself as `mstack:<agent>`. A repo's own `.claude/agents/<agent>.md` with the same name runs in its place under `deep-review` and `audit`. `audit` uses `test-reviewer` to grade the tests.
+The reviewers review only and never edit. `deep-review` picks them for the scope, and you can start one yourself as `mstack:<agent>`. A repo's own `.claude/agents/<agent>.md` with the same name runs in its place under `deep-review`. `audit` uses `test-reviewer` to grade the tests, and a repo's own `test-reviewer` runs in its place there too.
 
 | Agent | Finds |
 |---|---|
@@ -52,13 +52,15 @@ The skills read the repo's `CLAUDE.md` or `AGENTS.md`. They look for these terms
 
 | Term | Read by | What it gives |
 |---|---|---|
-| grill checklist | `grill` | Questions every plan in the repo must answer, as a list under that heading or a pointer to a file. It may also give a record format, and then `grill` writes a record in that format every time |
-| test command | `tdd` | How to run one test, and how to run the tests of a package or module |
+| grill checklist | `grill` | Questions every plan in the repo must answer, as a list under that heading or a pointer to a file. It may also give a record format, and then `grill` writes one record in that format at the end of every session |
+| test command | `tdd`, `bug` | How to run one test, and how to run the tests of a package or module |
 | test layers | `tdd`, `bug` | The kinds of test the repo requires. `bug` takes "the layer that should have caught it" from this list |
-| commit rules | `ship`, and through it `tdd`, `bug` and `audit` | Types, scopes and footers. They win over the defaults, except for the language |
-| reviewers that always run | `deep-review`, `bug` | Reviewers that `deep-review` includes whatever the scope is |
+| commit rules | `ship`, and through it `tdd`, `bug` and `audit` | Types, scopes, title lengths and footers. They win over the defaults, except for the language |
+| reviewers that always run | `deep-review`, `bug` | Reviewers that `deep-review` includes whatever the scope is, within `max N`, right after `bug-reviewer` |
 
-A repo can also replace a reviewer. A file `.claude/agents/<name>.md` with the name of a reviewer above runs in its place under `deep-review` and `audit`.
+A repo can also replace a reviewer. A file `.claude/agents/<name>.md` with the name of a reviewer above runs in its place under `deep-review`. Under `audit` only `test-reviewer` can be replaced, and `accessibility-review` always runs the plugin's `accessibility-reviewer`.
+
+The skills also follow other instructions in those files, such as the check commands and where decisions are recorded. Only the terms above are stable.
 
 ## The reviewer output format
 
@@ -73,8 +75,9 @@ A repo's own reviewer returns findings in this form, because `deep-review` check
 
 - The label on the second line may differ. The plugin's reviewers use Scenario, Load, Source, Code, Evidence and Behavior.
 - A fix is mechanical when it changes no behavior anyone relies on, no public API, no schema and no design. Anything else is a decision, and the Fix line then gives the options.
-- Findings come most severe first. The report ends with a "Hand-offs" list, one line for each thing outside the reviewer's area. With no findings, it says so in one line.
-- A reviewer never edits files, commits, pushes or starts a server. It runs no tests, builds or installs, because the reviewers share one checkout.
+- Findings come most severe first. A reviewer may add sections of its own, such as a coverage table. The findings end with a "Hand-offs" list, one line for each thing outside the reviewer's area. With no findings, the findings part is one line.
+- A reviewer never edits files, commits, pushes or starts a server. It runs no builds or installs, because the reviewers share one checkout. Only `test-reviewer` runs tests, limited to the files in scope. `security-reviewer` may run the repo's audit command, `simplify-reviewer` its dead-code tool, and `accessibility-reviewer` its accessibility lint and tests.
+- `deep-review` maps other severity words to these three and works out the kind itself when a `Kind:` line is missing. A reviewer in this form leaves it nothing to guess.
 
 ## Commands a guard hook must allow
 
@@ -83,7 +86,12 @@ A repo that blocks risky git commands with a hook has to let these through:
 - `git push --force-with-lease --force-if-includes origin HEAD`, which `sync-base` uses after a rebase or an amend.
 - `git push --force-with-lease=<branch>:<sha> origin HEAD`, which `sync-base` uses after it cherry-picked commits from the remote. `--force-if-includes` would refuse there.
 - `git commit --no-verify` with a message that starts with `sync-base: temporary`. `sync-base` sets uncommitted work aside in such commits before a rebase and removes them after it.
-- `git commit --fixup` and `git rebase -i --autosquash` with `GIT_SEQUENCE_EDITOR=:`, on commits that are not pushed. `ship` adds `--autostash`, and `audit` runs the rebase without `-i`.
+- `git commit --fixup` and `git rebase -i --autosquash` with `GIT_SEQUENCE_EDITOR=:`. `ship` and `audit` use them on commits that are not pushed, and `ship` adds `--autostash`. `sync-base` uses them after a rebase whose push then goes out with a lease.
+- `git commit --amend` on the last commit when it is not pushed, and `git branch -m` on a branch with no upstream, in `ship`.
+- `git rebase origin/<base>`, `git rebase --onto`, `git rebase --abort`, `git cherry-pick`, `git reset --soft HEAD~1` and `git reset --mixed HEAD~1`, in `sync-base`.
+- `git restore <path>` on a tracked file that a script changed, in `audit`.
+- `git bisect`, in `bug`.
+- Writes to the `mstack/handoffs` folder inside the repo's git folder, in `handoff`.
 - `gh stack submit`, `gh stack push`, `gh stack sync` and `gh stack rebase`, in the stack mode of `ship`. They rebase and push with a lease.
 
 The skills never use a plain `--force`, never push to the default branch unless you ask, never use `--no-verify` on any other commit, and never run `git stash` or `git reset --hard`.
@@ -92,7 +100,8 @@ The skills never use a plain `--force`, never push to the default branch unless 
 
 Other repos call these by name, so they change only with a new major version, and before 1.0 with a new minor version:
 
-- the skill names and the arguments in the table above
+- the skill names and the arguments in the Skills table
+- the names of the reviewer agents
 - the terms under "What a repo can tell mstack"
 - the reviewer output format
 - `mstack:handoff resume`

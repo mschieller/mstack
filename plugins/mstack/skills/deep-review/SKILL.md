@@ -49,7 +49,7 @@ Choose the reviewers for the scope and focus, as many as N allows. Include `bug-
 
 `accessibility-reviewer` is also in that folder but is not part of this roster. Never start it from this skill, also when a focus word names accessibility. It runs only when the user asks for an accessibility review, through the `mstack:accessibility-review` skill or started directly.
 
-When the repo's CLAUDE.md or AGENTS.md names reviewers that always run, include them as it says, whatever the scope.
+When the repo's CLAUDE.md or AGENTS.md names reviewers that always run, include them as it says, whatever the scope, except `accessibility-reviewer`.
 
 N is a hard limit. When these rules ask for more reviewers than N allows, keep `bug-reviewer`, then the reviewers the repo says always run, then `security-reviewer`, then `spec-reviewer`, then the reviewers the focus words name, then the rest by how much of the scope they cover. Name the dropped reviewers in the plan line.
 
@@ -92,7 +92,7 @@ When the PR is someone else's, edit nothing. Hand every finding to the `mstack:a
 
 ## 7. Fix mechanical findings
 
-If the working tree is on the default branch or a detached HEAD, create a branch first. Fix each mechanical finding with the smallest change. Run the repo's checks for the touched files (format, lint, typecheck and the tests next to the changes, as the repo's CLAUDE.md or package scripts name them). Commit the fixes in logical groups, with messages that say what each group fixes, and stage only the files your fixes touched. If tracked files had uncommitted changes when the review started, do not commit. Leave the fixes in the tree, so the user's own work stays out of the fix commits. Report which numbers you fixed, the check results, and whether the fixes are committed.
+If the working tree is on the default branch or a detached HEAD, create a branch first. Fix each mechanical finding with the smallest change. Run the repo's checks for the touched files (format, lint, typecheck and the tests next to the changes, as the repo's CLAUDE.md or package scripts name them). Commit the fixes in logical groups, each with a title in the form step 3 of the `mstack:ship` skill gives, and stage only the files your fixes touched. If tracked files had uncommitted changes when the review started, do not commit. Leave the fixes in the tree, so the user's own work stays out of the fix commits. Report which numbers you fixed, the check results, and whether the fixes are committed.
 
 If a fix turns out to need a decision, move it to step 8 instead.
 
@@ -100,7 +100,7 @@ If a fix turns out to need a decision, move it to step 8 instead.
 
 Hand the decision findings to the `mstack:ask-me` skill, highest score first. It sets how each one is asked and applied. These rules add to it.
 
-Commit each applied answer as one commit, staging only the files it touched. Nothing is committed for an answer that changes no file. Run the repo's checks for the touched files before the commit, also when they are slow. The rule in `mstack:ask-me` that moves a slow check to its close does not apply here. The commit rules of step 7 hold here too: create a branch first on the default branch or a detached HEAD, and commit nothing when tracked files had uncommitted changes at the start.
+Commit each applied answer as one commit with a title in that form, staging only the files it touched. Nothing is committed for an answer that changes no file. Run the repo's checks for the touched files before the commit, also when they are slow. The rule in `mstack:ask-me` that moves a slow check to its close does not apply here. The commit rules of step 7 hold here too: create a branch first on the default branch or a detached HEAD, and commit nothing when tracked files had uncommitted changes at the start.
 
 After ten decisions, stop and say how many remain and their score range. Ask once whether to continue. If the user stops, list the rest at the end as not walked.
 

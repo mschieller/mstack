@@ -20,4 +20,4 @@ The `browser` plugin is optional. Install it with `claude plugin install browser
 
 ## License
 
-MIT, see [LICENSE](LICENSE). The skills `architecture`, `grill`, `ship`, `unslop` and `visualize` are adapted from other MIT-licensed work. Each keeps the original license in its folder and names its source at the top of its `SKILL.md`.
+MIT, see [LICENSE](LICENSE). The skills `architecture`, `bug`, `grill`, `handoff`, `ship`, `tdd`, `unslop` and `visualize` are adapted from other MIT-licensed work. Each keeps the original license in its folder and names its source at the top of its `SKILL.md`.

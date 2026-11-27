@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Bring a repo's npm, pnpm and Go dependencies, its Node or Go version and its GitHub Actions up to date in one run. Fixes what `pnpm audit`, `npm audit` or `govulncheck` reports with patch and minor updates, lists the open Dependabot alerts it did not close, asks before a major upgrade that is not free, removes overrides nothing needs any more, pins versions, moves Node to the active LTS with an exact version in apps and the active LTS major as the floor of a published package, moves GitHub Actions to their newest release pinned to a commit SHA, and sets up or updates Dependabot version updates with the minor and patch updates grouped into weekly PRs. Grades how far the tests cover what the run changed and names tests to add when they fall short. Surveys first, asks its questions in one round, works unattended until one round of questions about majors, then reports, picks a single PR or a stack, and asks once before it ships. Always runs the whole job. Use when the user says "audit", "audit the repo" or "fix the vulnerable dependencies". For a security review of code, use security-review.
+description: Bring a repo's npm, pnpm and Go dependencies, its Node or Go version and its GitHub Actions up to date in one run. Fixes what `pnpm audit`, `npm audit` or `govulncheck` reports with patch and minor updates, lists the open Dependabot alerts it did not close, asks before a major upgrade that is not free, removes overrides nothing needs any more, pins versions, moves Node to the active LTS with an exact version in apps and the active LTS major as the floor of a published package, moves GitHub Actions to their newest release pinned to a commit SHA, and sets up or updates Dependabot version updates with the minor and patch updates grouped into weekly PRs. Grades how far the tests cover what the run changed and names tests to add when they fall short. Surveys first, asks its questions in one round, works unattended until one round of questions about majors, then reports, picks a single PR or a stack, and asks once before it ships. Always runs the whole job. Use when the user says "audit", "audit the repo" or "fix the vulnerable dependencies". For a security review of code, use the built-in security-review skill.
 ---
 
 # Audit
@@ -10,7 +10,7 @@ Do the whole job in one run and stop at the summary. The user reads it and confi
 ## Rules
 
 - Commit locally, one commit per unit, in the order of the steps below. A stack can then be cut at commit boundaries.
-- Before the first commit, read the title rules in step 3 of the `mstack:ship` skill, the repo's commitlint config and `git log --oneline -20`. Take the language from ship's step 3, and the types, scopes and lengths from the commitlint config and the log. Write every commit title in that form, so that no title needs a rewrite before the push.
+- Before the first commit, read the title rules in step 3 of the `mstack:ship` skill, the repo's commitlint config and `git log --oneline -20`. Take the language from ship's step 3, and the types, scopes, lengths and footers from the commit rules in the repo's CLAUDE.md or AGENTS.md, the commitlint config and the log. Write every commit title in that form, so that no title needs a rewrite before the push.
 - Run the repo's formatter on each file the run writes, before the commit that adds it: the repo's `format` script, or the formatter the repo uses, such as Prettier or Biome, or the tool that a script such as `fix:format` calls. Give it only the files the run wrote. When the repo has no formatter for a file type, write the file in the style of its neighbours and run nothing.
 - Never push the audited repo or open a PR in it before the user has confirmed the ship in step 12.
 - A tracked file that a script changes after the survey goes into the commit that caused the change, when the new version of a tool generates the file. Otherwise restore it with `git restore <path>`.
@@ -164,7 +164,7 @@ Write a brief for each major that is not free, whether it is a dependency, Node 
 - the peer dependencies the target declares, and whether the versions the repo installs meet them
 - each breaking change between them and what it does
 - the breaking changes that hit the repo, each with its `file:line`, and the edits the upgrade needs
-- for a published package, whether the dependency reaches its public API, from the check below
+- for a published package, whether the dependency reaches its public API, from the check the ecosystem part gives for step 9
 
 Show all briefs, then ask with AskUserQuestion in one round, one question per major. A round may take several dialogs. Offer "Upgrade" and "Skip and report", with the one you recommend first. Recommend the upgrade when the advisory reaches production and the brief lists every edit it needs. Recommend skipping when the package is a dev dependency and the upgrade needs source edits. An ecosystem part may say more.
 
@@ -237,7 +237,7 @@ When the agent fails or returns no result lines, the summary says that the resul
 - When a Dockerfile changed and Docker is available, build the image.
 - When a workflow changed and `actionlint` is installed, run it. When it is not installed, skip it and leave it out of the summary.
 - Trace each new failure to its commit. Fix it there, or undo that commit's change and record why.
-- A fix or an undo from this step goes into the commit that caused it, never on top, so that a stack can still be cut at commit boundaries. Commit it with `git commit --fixup=<sha>`, then run `git rebase --autosquash <start of the run>`, with the commit recorded in step 1. Only the commits of this run are in that range. They are not pushed, so rewriting them is safe.
+- A fix or an undo from this step goes into the commit that caused it, never on top, so that a stack can still be cut at commit boundaries. Commit it with `git commit --fixup=<sha>`, then run `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash <start of the run>`, with the commit recorded in step 1. The `-i` with a no-op editor works on every git version. Only the commits of this run are in that range. They are not pushed, so rewriting them is safe.
 - Record the audit counts again. These are the "after" numbers.
 - Record `git rev-parse HEAD^{tree}` after the last verify run, after any fixup and autosquash. Ship skips its checks when it pushes this same tree.
 

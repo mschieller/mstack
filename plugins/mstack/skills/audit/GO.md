@@ -28,7 +28,14 @@ The output is a stream of JSON objects. Each `finding` has an `osv` id, a `fixed
 - Imported: the frame has a `package` and no `function`. The code imports the package and calls nothing vulnerable in it.
 - Required: the frame has neither. `go.mod` requires the module and the code imports nothing vulnerable from it.
 
-One advisory can show up at several levels. Count it once per module, at its highest level. A finding is test only when it is called in the second scan and not in the first. With several `go.mod` files, keep the counts per `go.mod`, and give their sum where one number is asked for.
+One advisory can show up at several levels. Count it once per module, at its highest level. Take the counts and the modules to fix from the second scan, which holds everything the first one does. A finding is test only when it is called in the second scan and not in the first.
+
+Neither scan sees a module that only test files import. `-test` adds the calls that tests make into modules the other code already imports, and nothing else. List the modules the scan cannot see by comparing these two outputs, and name them in the summary as not scanned:
+
+```
+go list -deps -f '{{with .Module}}{{.Path}}{{end}}' ./... | sort -u
+go list -deps -test -f '{{with .Module}}{{.Path}}{{end}}' ./... | sort -u
+``` With several `go.mod` files, keep the counts per `go.mod`, and give their sum where one number is asked for.
 
 The module `stdlib` is the Go standard library, and its `version` is the Go release that ran the scan, which `go version` prints in that folder. A `stdlib` finding is fixed by step 6, not by `go get`. In a library, leave the `stdlib` findings out of every count, before and after. They follow the Go on the machine and say nothing about the module.
 
@@ -38,7 +45,7 @@ The module `stdlib` is the Go standard library, and its `version` is the Go rele
 - List every `go.mod`, whether git tracks a `vendor` folder next to it, and whether the repo has a `go.work`.
 - Decide for each module whether it is a library or an app, as the rules say.
 - Run `go mod download`. If it fails, add that to the questions in step 2, since every later step needs the modules.
-- Run both scans. Record the count of findings per level, with the test-only ones named. These are the "before" numbers in the summary.
+- Run both scans. Record the count of findings per level, with the test-only ones named. These are the "before" numbers in the summary. Record the modules that only test files import.
 - Record the modules with a newer version, from `go list -m -u -json all`. Each object has `Path`, `Version`, `Indirect` and, when a newer version exists, `Update.Version`. A newer major has another module path, such as `example.com/mod/v2`, so this command does not show it.
 - List every `replace` and `exclude` line in `go.mod`. A `replace` to another module path or to a folder is a fork or a local copy. A `replace` of a module by the same path at another version is a pin. Find why each pin and each `exclude` was added, from a comment next to it or from the commit that added it, with `git log -S'<module>' --reverse -- go.mod`. Record the reason as a fix, as a hold-back, or as unknown.
 - Find every place that sets a Go version: the `go` and `toolchain` lines in `go.mod`, `.go-version`, `.tool-versions`, `go-version` and `go-version-file` inputs in workflows, and every `FROM` in a Dockerfile that names a `golang` image.
@@ -146,7 +153,7 @@ The touched set is every module the run moved, direct or indirect, plus Go and e
 
 ## Step 11: Summary
 
-- The scan counts before and after, as a table with called, imported and required, and the test-only findings named.
+- The scan counts before and after, as a table with called, imported and required, and the test-only findings named. The modules that only test files import, as not scanned.
 - Each finding that is left, with the reason it could not be fixed: no fixed version, only a new major that was not taken, or a fork or a local copy that holds the module back. Add the module that pulls it in, from `go mod why -m <module>`, and its level.
 - Each updated module as `{module}: {old} to {new}`, with direct and indirect ones apart.
 - Each `go` line that an update raised in a library, with the module that needed it.

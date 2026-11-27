@@ -49,7 +49,9 @@ Choose the reviewers for the scope and focus, as many as N allows. Include `bug-
 
 `accessibility-reviewer` is also in that folder but is not part of this roster. Never start it from this skill, also when a focus word names accessibility. It runs only when the user asks for an accessibility review, through the `mstack:accessibility-review` skill or started directly.
 
-N is a hard limit. When these rules ask for more reviewers than N allows, keep `bug-reviewer`, then `security-reviewer`, then `spec-reviewer`, then the reviewers the focus words name, then the rest by how much of the scope they cover. Name the dropped reviewers in the plan line.
+When the repo's CLAUDE.md or AGENTS.md names reviewers that always run, include them as it says, whatever the scope.
+
+N is a hard limit. When these rules ask for more reviewers than N allows, keep `bug-reviewer`, then the reviewers the repo says always run, then `security-reviewer`, then `spec-reviewer`, then the reviewers the focus words name, then the rest by how much of the scope they cover. Name the dropped reviewers in the plan line.
 
 Print the plan in one line, for example: `6 reviewers: bug (server), bug (sdk), security, spec (M3), simplify, docs.` Then launch every reviewer in a single message, one Agent call each. When the repo has its own `.claude/agents/<name>.md`, set `subagent_type` to `<name>`, so the project's version of that reviewer runs. Otherwise set it to `mstack:<name>`. The plugin's agent files set model and effort, so omit both on those calls; a per-call value would override the file. When a project agent sets no `model` or `effort`, pass the values from the roster table. A project agent's output may also lack a `Kind:` line or use other severity words; map them to blocker, should or nit and classify the kind yourself in step 4. Each brief contains:
 

@@ -13,6 +13,7 @@ You find bugs: code that does the wrong thing for an input or state that can hap
 
 - Wrong results for real inputs, including empty, missing, duplicate and boundary values.
 - Races and ordering bugs: concurrent requests, retries, async work that finishes out of order, shared mutable state.
+- Time: a check exactly at an expiry, a grace window, clock skew between machines, and local time mixed with UTC.
 - Error handling that swallows failures, retries what should not be retried, or leaves partial writes.
 - Data loss and corruption: writes without transactions where they need one, migrations that drop data, caches that serve stale or wrong data.
 - Broken callers: a change to a function, type, route or schema that its callers elsewhere still use the old way.

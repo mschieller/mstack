@@ -21,6 +21,9 @@ Each skill triggers from its description, or you call it as `/mstack:<skill>`. T
 | [docs-review](skills/docs-review/SKILL.md) | Checks the docs against each other and against the code | `docs` or `code` runs one pass only. `report` changes nothing. Doc names or areas narrow the findings |
 | [accessibility-review](skills/accessibility-review/SKILL.md) | Reviews a frontend against WCAG 2.2 level AA and gives every criterion a status | URLs of a running app, and paths. `report` changes nothing |
 | [ship](skills/ship/SKILL.md) | Commits, opens or updates the PR, and works until CI is green | An issue number or other context for the PR |
+| [tdd](skills/tdd/SKILL.md) | Builds a behaviour change test-first, one committed slice at a time | An issue number, a plan file or the behaviour to build |
+| [bug](skills/bug/SKILL.md) | Takes a bug from a failing test through the root cause and the fix to a PR | The bug report, an issue number or a failing test. A "why" question stops at the root cause |
+| [handoff](skills/handoff/SKILL.md) | Writes a note that lets a later session carry on, and finds it again | A slug for the task. `resume` first reads the newest matching note |
 | [sync-base](skills/sync-base/SKILL.md) | Brings the branch up to date with its base and looks for conflicts git cannot see | `rebase` or `merge` sets the strategy. A branch name sets the base |
 | [audit](skills/audit/SKILL.md) | Updates npm, pnpm and Go dependencies, the Node or Go version, GitHub Actions and Dependabot, and grades the tests that cover the changes | None |
 | [visualize](skills/visualize/SKILL.md) | Draws how something works as a diagram anchored in the code | What to draw. Empty means the current topic |
@@ -42,6 +45,59 @@ The reviewers review only and never edit. `deep-review` picks them for the scope
 | `test-reviewer` | Risky behavior with no test, tests that cannot fail |
 | `ops-reviewer` | Unsafe rollouts and migrations, health checks, observability gaps |
 | `accessibility-reviewer` | Failures of the WCAG 2.2 level A and AA criteria, with a status for each criterion. Runs only when asked, or under `accessibility-review` |
+
+## What a repo can tell mstack
+
+The skills read the repo's `CLAUDE.md` or `AGENTS.md`. They look for these terms there:
+
+| Term | Read by | What it gives |
+|---|---|---|
+| grill checklist | `grill` | Questions every plan in the repo must answer, as a list under that heading or a pointer to a file. It may also give a record format, and then `grill` writes a record in that format every time |
+| test command | `tdd` | How to run one test, and how to run the tests of a package or module |
+| test layers | `tdd`, `bug` | The kinds of test the repo requires. `bug` takes "the layer that should have caught it" from this list |
+| commit rules | `ship`, and through it `tdd`, `bug` and `audit` | Types, scopes and footers. They win over the defaults, except for the language |
+| reviewers that always run | `deep-review`, `bug` | Reviewers that `deep-review` includes whatever the scope is |
+
+A repo can also replace a reviewer. A file `.claude/agents/<name>.md` with the name of a reviewer above runs in its place under `deep-review` and `audit`.
+
+## The reviewer output format
+
+A repo's own reviewer returns findings in this form, because `deep-review` checks, rates and sorts them by it:
+
+```
+[blocker|should|nit] path/to/file:LINE: one-line claim
+  Scenario: what triggers it, and what goes wrong
+  Fix: the smallest concrete change
+  Kind: mechanical | decision
+```
+
+- The label on the second line may differ. The plugin's reviewers use Scenario, Load, Source, Code, Evidence and Behavior.
+- A fix is mechanical when it changes no behavior anyone relies on, no public API, no schema and no design. Anything else is a decision, and the Fix line then gives the options.
+- Findings come most severe first. The report ends with a "Hand-offs" list, one line for each thing outside the reviewer's area. With no findings, it says so in one line.
+- A reviewer never edits files, commits, pushes or starts a server. It runs no tests, builds or installs, because the reviewers share one checkout.
+
+## Commands a guard hook must allow
+
+A repo that blocks risky git commands with a hook has to let these through:
+
+- `git push --force-with-lease --force-if-includes origin HEAD`, which `sync-base` uses after a rebase or an amend.
+- `git push --force-with-lease=<branch>:<sha> origin HEAD`, which `sync-base` uses after it cherry-picked commits from the remote. `--force-if-includes` would refuse there.
+- `git commit --no-verify` with a message that starts with `sync-base: temporary`. `sync-base` sets uncommitted work aside in such commits before a rebase and removes them after it.
+- `git commit --fixup` and `git rebase -i --autosquash` with `GIT_SEQUENCE_EDITOR=:`, on commits that are not pushed. `ship` adds `--autostash`, and `audit` runs the rebase without `-i`.
+- `gh stack submit`, `gh stack push`, `gh stack sync` and `gh stack rebase`, in the stack mode of `ship`. They rebase and push with a lease.
+
+The skills never use a plain `--force`, never push to the default branch unless you ask, never use `--no-verify` on any other commit, and never run `git stash` or `git reset --hard`.
+
+## What is stable
+
+Other repos call these by name, so they change only with a new major version, and before 1.0 with a new minor version:
+
+- the skill names and the arguments in the table above
+- the terms under "What a repo can tell mstack"
+- the reviewer output format
+- `mstack:handoff resume`
+
+Each release has a tag and release notes on GitHub.
 
 ## What it needs
 

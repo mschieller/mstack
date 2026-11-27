@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "mstack",
-      "description": "Developer workflow skills and reviewer agents: review, deep-review with parallel reviewer agents, ship to a green PR, sync-base, grill, ask-me, architecture, docs-review, accessibility-review, dependency audit, visualize and unslop",
+      "description": "Developer workflow skills and reviewer agents: review, deep-review with parallel reviewer agents, ship to a green PR, sync-base, grill, ask-me, architecture, docs-review, accessibility-review, tdd, bug, handoff, dependency audit, visualize and unslop",
       "source": "./plugins/mstack"
     },
     {

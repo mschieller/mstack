@@ -59,3 +59,5 @@ Run the checks that were moved here. A failure reopens its item: say what failed
 Read the changed files together and look for conflicts the edits created between them. Ask about each one the same way.
 
 If another skill handed over the list, return the outcomes to it, and that skill writes the summary. Otherwise call the `advisor` tool if it is available, then finish with a table of every item and its outcome, followed by the choices you made without asking, what was run for real and what was only checked on paper, and the items not walked.
+
+When the walk ends with items left, because the user stops it or the context runs long, write a note with the `mstack:handoff` skill. Give it `ask-me` as the skill, and each item not walked with its outline and its options, so that a later session can go on with the list.

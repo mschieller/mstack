@@ -15,7 +15,7 @@ The `browser` plugin is optional. Install it with `claude plugin install browser
 
 | Plugin | What it holds |
 |---|---|
-| [mstack](plugins/mstack/README.md) | Twelve skills and ten reviewer agents: grill, ask-me, architecture, review, deep-review, docs-review, accessibility-review, ship, sync-base, audit, visualize and unslop |
+| [mstack](plugins/mstack/README.md) | Fifteen skills and ten reviewer agents: grill, ask-me, architecture, review, deep-review, docs-review, accessibility-review, tdd, bug, handoff, ship, sync-base, audit, visualize and unslop |
 | [browser](plugins/browser/README.md) | The Playwright browser tools, started so that they also work in a repo that pins pnpm in `devEngines`. Optional. `accessibility-review` uses it to check a rendered page |
 
 ## License

@@ -42,7 +42,7 @@ Group the changes into logical commits. Write every commit as a conventional com
 - The body follows one blank line after the title and states what changed and why. Footers such as `BREAKING CHANGE:` and `Refs #<issue>` follow one blank line after the body.
 - Add no attribution trailer or "generated with" line.
 
-The repo's own commit rules win over this list for the types, scopes and lengths they allow, but never for the language. Look for a commitlint config, a `commitlint` key in `package.json`, and a workflow that checks the PR title. This command lists the commitlint configs and the PR templates in the repo. It uses no shell glob, because zsh aborts a command whose glob matches nothing:
+The repo's own commit rules win over this list for the types, scopes and lengths they allow, but never for the language. Take them from the commit rules in the repo's CLAUDE.md or AGENTS.md, which may also name footers, and from a commitlint config, a `commitlint` key in `package.json`, and a workflow that checks the PR title. This command lists the commitlint configs and the PR templates in the repo. It uses no shell glob, because zsh aborts a command whose glob matches nothing:
 
 ```
 git ls-files | grep -iE '(^|/)(commitlint\.config\.[a-z]+|\.commitlintrc[^/]*|pull_request_template[^/]*|PULL_REQUEST_TEMPLATE/.*)$'
@@ -172,7 +172,7 @@ mutation($threadId: ID!, $body: String!) {
 }'
 ```
 
-- **Failed check.** Read the failed log with `gh run view <run-id> --log-failed`. Decide whether it is a real failure or an infrastructure flake. Fix real failures, run the checks from step 2, commit and push. Re-run a flake once with `gh run rerun <run-id> --failed`; if it fails again, treat it as real.
+- **Failed check.** Read the failed log with `gh run view <run-id> --log-failed`. Decide whether it is a real failure or an infrastructure flake. A flake is a runner that died, a network error or a rate limit. A test that fails now and then is a real failure. Fix real failures, run the checks from step 2, commit and push. Re-run a flake once with `gh run rerun <run-id> --failed`; if it fails again, treat it as real.
 - **Conflict or branch behind.** Use the `mstack:sync-base` skill, run the checks, and push as step 4 describes.
 - **Comment from `changeset-bot`.** Do not reply. It says whether the PR has a changeset. Act only when it finds no changeset and the PR needs one. The REST API adds `[bot]` to the login, so it reads `changeset-bot[bot]` there.
 - **Review comment from a bot.** Verify the finding against the code. When it is real, fix it, and after the push reply in the thread with the commit SHA and resolve the thread. When it is not, or when it asks for work outside the PR's goal, reply with a one-line reason and resolve the thread.

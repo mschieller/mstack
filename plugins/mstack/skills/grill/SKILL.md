@@ -18,6 +18,7 @@ Before the first round, read what the plan touches: the issue, the code, the doc
 
 - Look up small facts yourself. Send a read-heavy lookup to an Explore subagent on Haiku at medium effort. Never ask the user for something you can find in the repo, the tools or the docs.
 - A pending lookup blocks only the questions that depend on it. Ask the rest now.
+- When the repo's CLAUDE.md or AGENTS.md has a grill checklist, or points at one, read it. Ask each of its questions that the plan and the code leave open, in the rounds, next to your own.
 
 ## 2. Ask in rounds
 
@@ -31,7 +32,7 @@ Format each question like this:
 Recommended: <the answer you would pick and the reason in one sentence>
 ```
 
-Word every question so that "yes" accepts the recommendation. End each round with this line: `Reply "all" to accept every recommendation, or "all except Q3: b".`
+Word every question so that "yes" accepts the recommendation. End each round with these two lines: `Reply "all" to accept every recommendation, or "all except Q3: b".` and `Or run /mstack:ask-me to take the questions one dialog at a time.`
 
 The user answers as `A1: ...`. Treat "your suggestion", "your recommendation" and "yes" as accepting the recommendation.
 
@@ -54,7 +55,7 @@ Do not change code, create issues or open PRs until the user says so.
 
 ## 5. Docs mode
 
-Only when the user passed `docs`. Record decisions in the format the repo already uses: `docs/adr/`, `docs/decisions/`, a glossary file, or whatever the repo's CLAUDE.md or AGENTS.md names. Create files only when there is something to write. If the repo has no convention, ask where decisions should go before writing the first one.
+Only when the user passed `docs`, or when the repo's grill checklist gives a record format. With such a format, write the record in it every time, where the checklist says, and update what else it names. Its own rule for what gets a record wins over the three conditions below. Record decisions in the format the repo already uses: `docs/adr/`, `docs/decisions/`, a glossary file, or whatever the repo's CLAUDE.md or AGENTS.md names. Create files only when there is something to write. If the repo has no convention, ask where decisions should go before writing the first one.
 
 Record a decision only when all three hold:
 

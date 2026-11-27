@@ -11,8 +11,9 @@ Do the whole job in one run and stop at the summary. The user reads it and confi
 
 - Commit locally, one commit per unit, in the order of the steps below. A stack can then be cut at commit boundaries.
 - Before the first commit, read the title rules in step 3 of the `mstack:ship` skill, the repo's commitlint config and `git log --oneline -20`. Take the language from ship's step 3, and the types, scopes and lengths from the commitlint config and the log. Write every commit title in that form, so that no title needs a rewrite before the push.
-- Run the repo's formatter on each file the run writes, before the commit that adds it: the repo's `format` script, or the formatter the repo uses, such as Prettier or Biome. Give it only the files the run wrote. When the repo has no formatter for a file type, write the file in the style of its neighbours and run nothing.
+- Run the repo's formatter on each file the run writes, before the commit that adds it: the repo's `format` script, or the formatter the repo uses, such as Prettier or Biome, or the tool that a script such as `fix:format` calls. Give it only the files the run wrote. When the repo has no formatter for a file type, write the file in the style of its neighbours and run nothing.
 - Never push the audited repo or open a PR in it before the user has confirmed the ship in step 12.
+- A tracked file that a script changes after the survey goes into the commit that caused the change, when the new version of a tool generates the file. Otherwise restore it with `git restore <path>`.
 - When a script or check needs Docker and `docker info` fails, record it as not run, and say in the summary that CI runs it. Run `docker info` only when a check you are about to run needs Docker. Docker is available when it exits with 0. Never start, stop or poll Docker.
 
 ## Ecosystems
@@ -45,7 +46,7 @@ Ask everything the survey raised in one round with AskUserQuestion, with the rec
 - Whether to add Dependabot version updates, when the survey found no `dependabot.yml` and no Renovate config. Offer yes and no, and recommend yes, because the exact versions and commit SHAs this run writes go stale when no bot moves them. With no, step 4 is skipped.
 - A missing `CODEOWNERS` file in a repo that an org owns. Ask whether to add one. If yes, ask who owns the code: one owner for everything, or different owners for different paths, and which teams or people. Offer the candidates from the survey and let the user name others. Recommend one team for `*` when the user is in a team with access to the repo.
 - The questions the ecosystem part lists.
-- Commits on the default branch that origin lacks. They would become part of the audit's PR. Offer to stop so the user can push or move them, or to go on with them in the PR. Recommend stopping.
+- Commits on the default branch that origin lacks. They would become part of the audit's PR. Offer to stop so the user can push or move them, or to go on with them in the PR, where they keep their titles and count toward its size. Recommend stopping.
 - Uncommitted changes in the tree. Offer to stop so the user can commit or move them, or to commit them now as a first commit of their own, below every audit commit. Recommend stopping. The run cannot go on with a dirty tree, because the rebase in step 10 refuses one.
 
 After this round the run is unattended until the majors question in step 9, and again after it. When something new comes up, take the option you would have recommended and list it in the summary.
@@ -192,6 +193,7 @@ Evidence for a touched item is a test that would fail if the behavior the repo r
 - A dev tool or type package, such as a linter, test runner, bundler, type checker or `@types/*`: the baseline script that runs it. A script that ran and passed is full evidence.
 - Node: tests that can fail, which passed on the new version.
 - A base image: a test or CI job that starts the app in the image. A build alone is no evidence.
+- A build or a typecheck that passes is evidence for dev tools and type packages only, never for a runtime change.
 - A test or a script that failed in the baseline is no evidence.
 - A test that cannot fail on a wrong value, or that asserts only on mocks or snapshots, is no evidence. Line coverage counts only together with assertions that check behavior.
 
@@ -235,7 +237,6 @@ When the agent fails or returns no result lines, the summary says that the resul
 - When a Dockerfile changed and Docker is available, build the image.
 - When a workflow changed and `actionlint` is installed, run it. When it is not installed, skip it and leave it out of the summary.
 - Trace each new failure to its commit. Fix it there, or undo that commit's change and record why.
-- A tracked file that a script changed in this step goes into the commit that caused the change, when the new version of a tool generates the file. Otherwise restore it with `git restore <path>`.
 - A fix or an undo from this step goes into the commit that caused it, never on top, so that a stack can still be cut at commit boundaries. Commit it with `git commit --fixup=<sha>`, then run `git rebase --autosquash <start of the run>`, with the commit recorded in step 1. Only the commits of this run are in that range. They are not pushed, so rewriting them is safe.
 - Record the audit counts again. These are the "after" numbers.
 - Record `git rev-parse HEAD^{tree}` after the last verify run, after any fixup and autosquash. Ship skips its checks when it pushes this same tree.

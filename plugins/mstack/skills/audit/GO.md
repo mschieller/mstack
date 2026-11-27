@@ -15,7 +15,7 @@ The ecosystem part of the [audit skill](SKILL.md) for a repo with a `go.mod`. Ea
 
 ## The scan
 
-Run the scan twice, and read the JSON, because with `-format json` the exit code is 0 whatever the scan finds. Any other exit code means the scan itself failed, for example because the packages do not load. A failed scan prints no findings. Record it as not run, never as zero, and say so in the summary and in the PR:
+Run the scan twice, and read the JSON, because with `-format json` the exit code is 0 whatever the scan finds. Any other exit code means the scan itself failed, for example because the packages do not load. A failed scan prints no findings, and its error output names the cause after the first line. Record it as not run, never as zero, and say so in the summary and in the PR:
 
 ```
 govulncheck -format json ./...
@@ -30,7 +30,7 @@ The output is a stream of JSON objects. Each `finding` has an `osv` id, a `fixed
 
 One advisory can show up at several levels. Count it once per module, at its highest level. A finding is test only when it is called in the second scan and not in the first. With several `go.mod` files, keep the counts per `go.mod`, and give their sum where one number is asked for.
 
-The module `stdlib` is the Go standard library, and its `version` is the Go release that ran the scan, which `go version` prints in that folder. A `stdlib` finding is fixed by step 6, not by `go get`.
+The module `stdlib` is the Go standard library, and its `version` is the Go release that ran the scan, which `go version` prints in that folder. A `stdlib` finding is fixed by step 6, not by `go get`. In a library, leave the `stdlib` findings out of every count, before and after. They follow the Go on the machine and say nothing about the module.
 
 ## Step 1: Survey
 
@@ -90,8 +90,8 @@ Nothing to do. `go.mod` holds exact versions, and Go has no setting for a minimu
 - For an app, the target is the newest release of the newest supported minor from the survey, such as `1.27.4`. Set it with `go mod edit -go=<version>`, and remove a `toolchain` line with `go mod edit -toolchain=none`, because the `go` line already selects that release.
 - A move to a new minor must pass this check: `go build ./...`, `go vet ./...` and `go test ./...` pass with no source edit, every other baseline check that passed before still passes, and both scans still run. `go` downloads the release the `go` line names on its own. A scan can fail on a new minor until `govulncheck` supports it, also when it was built with that Go, and a module that cannot be scanned is worse off than one on the older minor. When the check fails, take the newest release of the minor the module is on, and record the minor and the reason for step 9. When that minor is no longer supported, record that too.
 - For a library, the `go` line is the oldest Go its consumers may use, not the Go it builds with. Set it to the oldest supported minor from the survey with a zero patch, such as `1.26.0`. Leave a `go` line that is already at or above it. Add no `toolchain` line and leave one that is there, so the library can still be tested on its floor. Run the check from the bullet above once with `GOTOOLCHAIN=go<floor>` in the environment, which makes `go` use that release.
-- Update every other place from the survey to the app target, written exact, such as `go-version: "1.27.4"`. Leave a `go-version-file` input as it is, since it follows `go.mod`. In a Dockerfile, keep the registry and the image variant, so `golang:1.26-alpine` becomes `golang:1.27.4-alpine`. Confirm that the tag exists in its registry before you write it.
-- Run `go mod tidy`, then the scan again. For an app, every `stdlib` finding whose `fixed_version` is at or below the target is gone. One that is left has no fix in a supported release. Report it. For a library the `stdlib` findings follow the Go on the machine and say nothing about the module, so leave them out of its counts.
+- Update every other place from the survey to the version the app's `go` line now holds, written exact, such as `go-version: "1.27.4"`. Leave a `go-version-file` input as it is, since it follows `go.mod`. In a Dockerfile, keep the registry and the image variant, so `golang:1.26-alpine` becomes `golang:1.27.4-alpine`. Confirm that the tag exists in its registry before you write it.
+- Run `go mod tidy`, then the scan again. For an app, every `stdlib` finding whose `fixed_version` is at or below the target is gone. One that is left has no fix in a supported release. Report it.
 - Commit.
 
 ## Step 8: Updates and fixes
@@ -113,13 +113,13 @@ Commit when done. The type is `fix` when an update clears a finding that is call
 
 ## Step 9: Majors
 
-Attempt a major only for a finding that is called and that is not test only. For every other module with a newer major, write one line for the summary, and leave it for the repo's update bot. A newer major has another module path, so look for it by name: `go list -m -versions <module>/v<N+1>` for a path such as `example.com/mod/v2`, and `gopkg.in/<name>.v<N+1>` for a `gopkg.in` path. The command fails when that major does not exist.
+Attempt a major only for a finding that is called and that is not test only. For every other module with a newer major, write one line for the summary, and leave it for the repo's update bot. A newer major has another module path, so look for it by name: `go list -m -versions <module>/v<N+1>` for a path such as `example.com/mod/v2`, and `gopkg.in/<name>.v<N+1>` for a `gopkg.in` path. The command fails, or prints no versions, when that major does not exist.
 
 ### Free majors
 
 No major of a Go module is free. A major has a new module path, so the upgrade rewrites every import of it, and each one gets a brief and a question.
 
-A new Go minor that failed the check in step 6 gets a brief and a question too.
+A new Go minor that failed the check in step 6 gets a brief and a question too. Its brief holds the check that failed and the line of the error that names the cause. Recommend "Skip and report" when the scan is what failed, because the module could not be scanned after the move.
 
 ### Targets
 
@@ -130,7 +130,7 @@ A new Go minor that failed the check in step 6 gets a brief and a question too.
 ### Rules for every major
 
 - In the brief, leave out the lines about peer dependencies. Go has none. "Reaches the public API" means that an exported function, type or field of a library names a type from the module. Go's database gives no severity. Take it from the GHSA id among the advisory's `aliases`, with `gh api /advisories/<GHSA id> --jq .severity`, and leave it out when there is none.
-- Recommend the upgrade in the question, since the finding is one the code calls.
+- For a module major, recommend the upgrade in the question, since the finding is one the code calls. Undo an upgrade when a check that passed before fails or a scan no longer runs.
 - To upgrade, run `go get <new module path>@<version>`, rewrite each import of the old path in the `.go` files outside `vendor`, run `gofmt -l` on the files you changed, and run `go mod tidy`, which drops the old requirement once nothing imports it.
 - Commit each major on its own, with the type `fix`.
 

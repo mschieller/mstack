@@ -22,7 +22,7 @@ The steps below are the same for every repo. What differs between ecosystems is 
 - [NODE.md](NODE.md), for a repo with a `package.json`
 - [GO.md](GO.md), for a repo with a `go.mod`
 
-The survey finds the ecosystems the repo has. Where a step says to do the ecosystem part, do what each file says under its heading for that step, once per ecosystem, and commit per ecosystem. A file with no heading for a step has no part in it. In a repo with none of these ecosystems, the ecosystem parts have nothing to do. Leave the counts table out of the summary then, and say so there.
+The survey finds the ecosystems the repo has. Where a step says to do the ecosystem part, do what each file says under its heading for that step, once per ecosystem, in the order of the list. In steps 5, 6, 8 and 9 each ecosystem gets its own commits. Steps 3, 4 and 7 make one commit each, whatever the number of ecosystems. A file with no heading for a step has no part in it. In a repo with none of these ecosystems, the ecosystem parts have nothing to do. Leave the counts table out of the summary then, and say so there.
 
 ## 1. Survey
 

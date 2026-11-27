@@ -39,7 +39,7 @@ The summary of a raised peer range says that consumers on an older version of th
 - Record the audit counts for info, low, moderate, high and critical. These are the "before" numbers in the summary.
 - Record the packages with a newer major, for the summary.
 - List every override in the places the reference file names. Find why each one was added, from a comment next to it or from the commit that added it and that commit's PR. `git log -S'<name>' --reverse -- <file>` lists the commits that changed the name, oldest first. Record the reason as a fix, when the forced version fixes an advisory or a bug, or as a hold-back, when a newer version broke the repo. Record it as unknown when nothing says.
-- Find every place that sets a Node version: `engines.node`, `.node-version`, `.nvmrc`, `.tool-versions`, `volta`, `node-version` inputs in workflows, every `FROM` in a Dockerfile, `@types/node` and a `@tsconfig/node<major>` base.
+- Find every place that sets a Node version: `engines.node`, `.node-version`, `.nvmrc`, `.tool-versions`, `volta`, `node-version` inputs in workflows, every `FROM` in a Dockerfile that names a `node` image, `@types/node` and a `@tsconfig/node<major>` base.
 - Find the active LTS line of Node. In `https://raw.githubusercontent.com/nodejs/Release/main/schedule.json` it is the line whose `lts` date has passed and whose `maintenance` date has not. Its newest release is the first entry in `https://nodejs.org/dist/index.json` whose `lts` field holds that line's codename.
 - When the repo has a `.changeset` folder, find the release tool, `@changesets/cli` and its major in `devDependencies` or pnpm's own `pnpm change`, and with Changesets read `ignore` and `privatePackages` from `.changeset/config.json`. Check the CI workflows for a step that fails a PR without a changeset.
 - Run every script in each `package.json` that tests, lints, typechecks or builds. Record what already fails. This is the baseline for step 10. A `test` script that is npm's placeholder, `echo "Error: no test specified" && exit 1`, is a known failure, recorded without a question. Run `git status --short` again afterwards. A tracked file that was clean before and that a script changed goes back with `git restore <path>`, so it stays out of the first commit.
@@ -53,7 +53,7 @@ The summary of a raised peer range says that consumers on an older version of th
 
 ## Step 4: Dependabot
 
-- With pnpm or npm, add this entry to `updates`. It is shown at the indentation it has in the file:
+- With pnpm or npm, add this entry to `updates`. Its `directory` is the folder with the lockfile. The snippet is indented two spaces more than in the file, as the example in the skill is:
 
   ```yaml
     - package-ecosystem: "npm"
@@ -72,7 +72,7 @@ The summary of a raised peer range says that consumers on an older version of th
 
   `npm` is the ecosystem for npm and for pnpm. Its `directory` is the folder that holds the lockfile. Leave the entry out with any other package manager.
 
-- When the survey found a Node version and the repo has a `docker` entry, add this to that entry:
+- When a Dockerfile names a `node` image and the repo has a `docker` entry, add this to that entry:
 
   ```yaml
       ignore:
@@ -80,7 +80,7 @@ The summary of a raised peer range says that consumers on an older version of th
           update-types: ["version-update:semver-major"]
   ```
 
-- The two `ignore` entries for Node turn off its majors. Step 6 moves Node to a new major by hand, in every place at once, and odd majors never become LTS. Dependabot cannot change `engines.node` or `.node-version`, so a major it took would move the image or the types alone. Write them when the survey found a Node version, and leave the `ignore` key out of the `npm` entry otherwise. When an image holds Node under another name, such as a mirrored image, add that name to the `docker` entry. A minor or patch update of the image moves the Dockerfile only, and step 6 brings every place back to one version on the next run.
+- The two `ignore` entries for Node turn off its majors. Step 6 moves Node to a new major by hand, in every place at once, and odd majors never become LTS. Dependabot cannot change `engines.node` or `.node-version`, so a major it took would move the image or the types alone. Always write the one for `@types/node`, since step 6 gives every repo with a `package.json` a Node version. When an image holds Node under another name, such as a mirrored image, add that name to the `docker` entry. A minor or patch update of the image moves the Dockerfile only, and step 6 brings every place back to one version on the next run.
 
 - With pnpm or npm, add a group for each family below whose main package a `package.json` in the repo lists. Its plugins declare the major they support, so each major of the family lands in one PR:
 

@@ -4,7 +4,7 @@ The commands for the `mstack:audit` skill in a repo with `pnpm-lock.yaml`. In a 
 
 ## Settings
 
-`pnpm-workspace.yaml` must have both settings. Create the file if the repo has none. Add a setting only when it is missing, because a key that appears twice breaks every pnpm command.
+`pnpm-workspace.yaml` next to the lockfile must have both settings. Create the file if the repo has none. Add a setting only when it is missing, because a key that appears twice breaks every pnpm command.
 
 ```yaml
 saveExact: true

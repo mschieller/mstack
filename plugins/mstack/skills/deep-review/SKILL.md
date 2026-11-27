@@ -26,7 +26,7 @@ Read the PR's author with `gh pr view <n> --json author --jq .author`. The PR is
 
 ## 2. Map before you dispatch
 
-Read the repo's CLAUDE.md, AGENTS.md, README, ADR folder and docs index. For a large repo, map the top-level areas and their sizes first. Do it yourself. When the map would fill your context, one Explore agent on Haiku at medium effort may do it.
+Read the repo's CLAUDE.md, AGENTS.md, README, ADR folder and docs index. For a large repo, map the top-level areas and their sizes first. Do it yourself. When the map would fill your context and the session allows subagents, one Explore agent on Haiku at medium effort may do it.
 
 For a PR scope, list the review comments already there with `gh api --paginate repos/{owner}/{repo}/pulls/<n>/comments --jq '.[] | {path, line, user: .user.login, body}'`. Step 4 uses them.
 

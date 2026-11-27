@@ -12,7 +12,7 @@ Work one vertical slice at a time: a thin path through every layer it needs, pro
 
 ## Before the first slice
 
-- Run the `mstack:handoff` skill with `resume` and the issue number, or the name of the plan or record that the arguments give. With neither, run it with `resume` alone, which takes the note of the current branch. When it finds a note, start at the note's next step. When it finds none, go on. Skip this bullet when `mstack:handoff resume` loaded this skill, or when the skill that called this one says it already ran it. Start then at the step and with the slices the caller names.
+- Run the `mstack:handoff` skill with `resume` and the issue number, or the name of the plan or record that the arguments give. With neither, run it with `resume` alone, which takes the note of the current branch. When it finds a note, start at the note's next step. When it finds none, go on. Skip this bullet when `mstack:handoff resume` loaded this skill. Skip it too when the skill that called this one says it already ran it, and start at the step and with the slices that skill names.
 - Find the test command. The repo's CLAUDE.md or AGENTS.md gives it as its test command. Otherwise take it from the package scripts, the Makefile or the CI workflow. Find the form that runs one test, and the form that runs the package or module you are in. Find the option that lists each test with its result, such as `go test -v`, because a runner may print a pass for a package whose test was skipped. When the repo has no test runner or no way to run one test, stop and ask whether to set one up, and name the runner you would pick.
 - Run the tests of the package or module once and record what already fails and what is skipped. A skipped test that a slice depends on, such as one that needs a database, has to run before the loop starts. Fix the setup, or stop and ask.
 - Find the slices. They are the acceptance criteria of the issue, the decision record or the plan that the arguments name, one slice for each. When none are written down, write them as one line each, "given, when, then", show the list to the user and wait for an OK.
@@ -49,7 +49,7 @@ Commit the test as step 6 of the loop says, with the type `test`, and go on to t
 
 ## When you stop
 
-When the loop has to stop before the list is done, write a note with the `mstack:handoff` skill. Give it `tdd` as the skill, "Loop, step 1" as the next step, the issue or record the slices came from as the ref, and the slices that are left.
+When the loop has to stop before the list is done, write a note with the `mstack:handoff` skill. Give it `tdd` as the skill, "Loop, step 1" as the next step, the issue or record the slices came from as the ref, and the slices that are left. When a calling skill gave an ID for the task, such as a feature number, add it to the ref, so that the caller's `resume` with that ID finds the note.
 
 ## Report
 

@@ -107,7 +107,8 @@ A skill of your own that calls these skills can pass them the following.
 | `ship` | A layer plan for a stack | Opens the stack by that plan without asking for one |
 | `deep-review` | Work that a later step does, such as a status line it updates after the review | Tells the reviewers not to report it, and names it in one line of the report |
 | `grill` | That an approval stop of its own follows | Writes the summary and the records, and leaves the closing question to that stop |
-| `tdd`, `bug` | That it already ran `mstack:handoff resume` | Does not run it again |
+| `tdd`, `bug` | That it already ran `mstack:handoff resume`, and the step to start at | Does not run it again, and starts at that step |
+| `tdd`, `bug`, `ask-me` | An ID for the task, such as a feature number | Writes it in the Ref line of a note it has to leave, so that the caller's `resume` with that ID finds the note |
 | `handoff` | Its name, its next step and the issue or record it works on | Writes them in the note's Skill and Ref lines, and `resume` loads that skill at that step |
 | `ask-me` | A list of findings, and a rule for what follows each answer, such as a commit | Walks the list, follows the rule and returns the outcomes |
 

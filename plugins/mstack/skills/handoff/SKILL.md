@@ -30,7 +30,7 @@ Without `resume`, write `<dir>/<yyyy-mm-dd>-<slug>.md`. The slug names the task 
 # <the task in one line>
 
 - Skill: <the skill that was running, or none>, next step: <its step number and name>
-- Ref: <an issue, a PR or a decision record, when there is one>
+- Ref: <an issue, a PR, a decision record or a calling skill's ID for the task, each one there is, or none>
 
 ## Goal
 

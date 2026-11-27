@@ -12,7 +12,7 @@ Take a bug from a report to a reviewed fix, and to an open PR when the user want
 
 ## Before you start
 
-- Run the `mstack:handoff` skill with `resume` and the issue number, or a slug for this bug as that skill forms one. When it finds a note, start at the note's next step. When it finds none, go on. Skip this bullet when `mstack:handoff resume` loaded this skill, or when the skill that called this one says it already ran it. Start then at the step the caller names.
+- Run the `mstack:handoff` skill with `resume` and the issue number, or two or three plain words from the bug report, as separate words. When it finds a note, start at the note's next step. When it finds none, go on. Skip this bullet when `mstack:handoff resume` loaded this skill. Skip it too when the skill that called this one says it already ran it, and start at the step that skill names.
 - Find the test command and run the tests of the package once, as the second and third bullets under "Before the first slice" in the `mstack:tdd` skill say.
 - On the default branch, create a branch `fix/<slug>` before step 5, in the form step 1 of the `mstack:ship` skill gives. On another branch, when `git log origin/<base>..HEAD` or `git status --short` shows work that has nothing to do with this bug, ask whether to branch `fix/<slug>` from the base or to fix it here.
 
@@ -33,7 +33,7 @@ Take a bug from a report to a reviewed fix, and to an open PR when the user want
 
 Stop and ask only when you cannot restate the bug, when you cannot reproduce it after trying the two lowest layers, or when the fix needs a change in behaviour that no recorded decision covers.
 
-When you have to stop partway, remove the temporary logs and assertions by hand, then write a note with the `mstack:handoff` skill. Give it `bug` as the skill, the next step, the issue as the ref when there is one, the hypotheses you ruled out and the evidence for each.
+When you have to stop partway, remove the temporary logs and assertions by hand, then write a note with the `mstack:handoff` skill. Give it `bug` as the skill, the next step, the issue as the ref when there is one, the hypotheses you ruled out and the evidence for each. When a calling skill gave an ID for the task, add it to the ref, so that the caller's `resume` with that ID finds the note.
 
 ## Report
 

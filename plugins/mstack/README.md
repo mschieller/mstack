@@ -22,7 +22,7 @@ Each skill triggers from its description, or you call it as `/mstack:<skill>`. T
 | [accessibility-review](skills/accessibility-review/SKILL.md) | Reviews a frontend against WCAG 2.2 level AA and gives every criterion a status | URLs of a running app, and paths. `report` changes nothing |
 | [ship](skills/ship/SKILL.md) | Commits, opens or updates the PR, and works until CI is green | An issue number or other context for the PR |
 | [sync-base](skills/sync-base/SKILL.md) | Brings the branch up to date with its base and looks for conflicts git cannot see | `rebase` or `merge` sets the strategy. A branch name sets the base |
-| [audit](skills/audit/SKILL.md) | Updates dependencies, Node, GitHub Actions and Dependabot, and grades the tests that cover the changes | None |
+| [audit](skills/audit/SKILL.md) | Updates npm, pnpm and Go dependencies, the Node or Go version, GitHub Actions and Dependabot, and grades the tests that cover the changes | None |
 | [visualize](skills/visualize/SKILL.md) | Draws how something works as a diagram anchored in the code | What to draw. Empty means the current topic |
 | [unslop](skills/unslop/SKILL.md) | Removes AI patterns from prose. Claude loads it on its own, and it has no slash command | None. Ask "unslop" with a file or a piece of text |
 

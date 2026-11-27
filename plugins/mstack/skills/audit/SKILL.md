@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Bring a repo's dependencies, Node version and GitHub Actions up to date in one run. Fixes what `pnpm audit` or `npm audit` reports with patch and minor updates, lists the open Dependabot alerts it did not close, asks before a major upgrade that is not free, removes overrides nothing needs any more, pins versions, moves Node to the active LTS with an exact version in apps and the active LTS major as the floor of a published package, moves GitHub Actions to their newest release pinned to a commit SHA, and sets up or updates Dependabot version updates with the minor and patch updates grouped into weekly PRs. Grades how far the tests cover what the run changed and names tests to add when they fall short. Surveys first, asks its questions in one round, works unattended until one round of questions about majors, then reports, picks a single PR or a stack, and asks once before it ships. Always runs the whole job. Use when the user says "audit", "audit the repo" or "fix the vulnerable dependencies". For a security review of code, use security-review.
+description: Bring a repo's npm, pnpm and Go dependencies, its Node or Go version and its GitHub Actions up to date in one run. Fixes what `pnpm audit`, `npm audit` or `govulncheck` reports with patch and minor updates, lists the open Dependabot alerts it did not close, asks before a major upgrade that is not free, removes overrides nothing needs any more, pins versions, moves Node to the active LTS with an exact version in apps and the active LTS major as the floor of a published package, moves GitHub Actions to their newest release pinned to a commit SHA, and sets up or updates Dependabot version updates with the minor and patch updates grouped into weekly PRs. Grades how far the tests cover what the run changed and names tests to add when they fall short. Surveys first, asks its questions in one round, works unattended until one round of questions about majors, then reports, picks a single PR or a stack, and asks once before it ships. Always runs the whole job. Use when the user says "audit", "audit the repo" or "fix the vulnerable dependencies". For a security review of code, use security-review.
 ---
 
 # Audit
@@ -20,6 +20,7 @@ Do the whole job in one run and stop at the summary. The user reads it and confi
 The steps below are the same for every repo. What differs between ecosystems is in a file of its own, under a heading that names the step:
 
 - [NODE.md](NODE.md), for a repo with a `package.json`
+- [GO.md](GO.md), for a repo with a `go.mod`
 
 The survey finds the ecosystems the repo has. Where a step says to do the ecosystem part, do what each file says under its heading for that step, once per ecosystem, and commit per ecosystem. A file with no heading for a step has no part in it. In a repo with none of these ecosystems, the ecosystem parts have nothing to do. Leave the counts table out of the summary then, and say so there.
 
@@ -90,7 +91,7 @@ This run writes exact versions and commit SHAs, and Dependabot's version updates
         day: "monday"
   ```
 
-  The example holds the entries that are the same in every repo. Write `github-actions` only when the repo has a workflow, and `docker` only when it has a Dockerfile. Each ecosystem part adds its own entry to `updates`, and may add an `ignore` list to the `docker` entry when the repo has that entry.
+  The example holds the entries that are the same in every repo. Write `github-actions` only when the repo has a workflow, and `docker` only when it has a Dockerfile. Each ecosystem part adds its own entry to `updates`, and may add an `ignore` list to the `docker` entry when the repo has that entry. When two parts add to the same entry, write one `ignore` key that holds both.
 
   For `github-actions`, `directory: "/"` covers `.github/workflows` and an `action.yml` at the root. With `action.yml` files in other folders, write `directories` with `/` and each of those folders in place of `directory`, so the pins step 7 writes there stay current too. Write the entry when the repo has a workflow. `<owner>` is the owner's login from the survey, so the references step 7 leaves alone stay where they are. Dependabot updates a SHA pin and the version comment after it together.
 
@@ -115,7 +116,7 @@ Do the ecosystem part.
 
 ## 6. Runtime version
 
-Do the ecosystem part. It moves the runtime the repo builds and runs on, such as Node.
+Do the ecosystem part. It moves the runtime the repo builds and runs on, such as Node or Go.
 
 ## 7. Workflows
 
@@ -347,7 +348,7 @@ Dev tools, not counted: <name and version> (<the script that passed>).
 
 Fill in the Results rows like this, and change no words of the reviewer's lines:
 
-- Advisories: `None before or after.` when the audit found none. Leave the row out when step 1 skipped the dependency steps.
+- Advisories: `None before or after.` when the audit found none. Leave the row out when step 1 skipped the dependency steps. An ecosystem part may give its own row and its own table in place of these. With several ecosystems, the section has one row and one table for each.
 - Dependabot: `<n> open alerts, <m> close when this merges.` when some stay open, and each one that stays gets a row in "Left open". `No open alerts.` or `Alerts are off.` when that is the case.
 - This PR's changes: leave out the second sentence when the result is Covered or Not covered. Nothing to cover reads `Nothing to cover: the PR has no runtime change.`
 - The repo's tests: Good reads `Good.`
